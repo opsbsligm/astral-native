@@ -16,6 +16,9 @@ __pycache__/
 /game/
 /build/
 /generated/
+# CI job outputs (pip --target wheels, pip cache under out/home): untracked and never committed,
+# but tools/check_content.py scans them in the native-unit job, so keep them out of the scan like BOTW does.
+/out/
 *.xci
 *.xcz
 *.nsp
