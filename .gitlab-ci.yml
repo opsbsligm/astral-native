@@ -24,6 +24,11 @@ native-unit:
   needs: []
   tags: [native-games]
   image: native-games/toolchain:199fb078c5ce818f099c
+  before_script:
+    # The toolchain image ships no Python deps (runs as uid 1001; /opt/venv is root-owned).
+    # tools/extract.py needs cryptography+cffi+pycparser; the tests import installer steps that import extract.
+    - python3 -m pip install --target "$CI_PROJECT_DIR/out/extra-pkgs" --quiet -r tools/requirements-installer.txt
+    - export PYTHONPATH="$CI_PROJECT_DIR/out/extra-pkgs"
   script:
     - python3 tools/check_content.py
     - python3 tests/spin_waits_test.py -v
