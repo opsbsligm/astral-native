@@ -60,13 +60,19 @@ void cheats_frame(uint64_t frame);   // cheats.c
 bool tab_cheats(float scale);        // ui/cheats_tab.cpp; true: restart into the rebuild
 }
 
-// Roboto Medium (Apache-2.0, ui/fonts/LICENSE-Roboto.txt) with Latin and Cyrillic glyphs.
+// Roboto Medium (Apache-2.0, ui/fonts/LICENSE-Roboto.txt) with Latin and Cyrillic glyphs. A compiler with C23
+// #embed reads the font directly; clang 18 (the CI image) has no working #embed for C++, so tools/build_game.py
+// writes roboto_ttf.inc.h (the same bytes as a C array) into the build dir and the fallback includes it instead.
+#if defined(__cpp_embedded_file_data)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wc23-extensions"   // #embed in C++
 static const unsigned char roboto_ttf[] = {
 #embed "fonts/Roboto-Medium.ttf"
 };
 #pragma clang diagnostic pop
+#else
+#include "roboto_ttf.inc.h"
+#endif
 
 // ---- open state, any thread
 static std::atomic<int> g_open;     // the menu is open

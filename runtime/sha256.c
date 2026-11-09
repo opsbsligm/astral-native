@@ -7,6 +7,10 @@
 
 #if defined(__x86_64__)
 #include <immintrin.h>
+#include <sys/auxv.h>
+#ifndef HWCAP_SHA
+#define HWCAP_SHA (1UL << 29)
+#endif
 #endif
 
 static const uint32_t K[64] = {
@@ -78,7 +82,9 @@ __attribute__((target("sha,sse4.1"))) static void blocks_ni(uint32_t h[8], const
 static void blocks(uint32_t h[8], const uint8_t *p, size_t n) {
 #if defined(__x86_64__)
     static int ni = -1;
-    if (ni < 0) ni = __builtin_cpu_supports("sha") && __builtin_cpu_supports("sse4.1");
+    // The kernel exposes SHA-NI through HWCAP (auxv); the builtin's "sha" feature string needs a newer clang
+    // (18 only knows it to the target attribute, not to the runtime probe), so probe the HWCAP bit directly.
+    if (ni < 0) ni = (getauxval(AT_HWCAP) & HWCAP_SHA) != 0 && __builtin_cpu_supports("sse4.1");
     if (ni) return blocks_ni(h, p, n);
 #endif
     blocks_c(h, p, n);
