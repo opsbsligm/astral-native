@@ -1,0 +1,35 @@
+# astral-native CI（首版门禁：内容守卫 + 纯 Python 单元 + 密钥扫描）。
+# 完整安全扫描（SAST/Container/Dependency）与 C runtime 构建见 docs/ci-roadmap.md，下一 MR 接入。
+include:
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
+
+stages: [test]
+
+default:
+  tags: [native-games]
+  timeout: 20 minutes
+
+content-check:
+  needs: []
+  image: python:3.12
+  script:
+    - python3 tools/check_content.py
+
+native-unit:
+  needs: []
+  image: python:3.12
+  script:
+    - python3 tests/spin_waits_test.py -v
+    - python3 tests/pack_shader_cache_test.py -v
+    - python3 tests/installer_test.py -v
+
+secret_detection:
+  image: ${NATIVE_SECURITY_PREFIX}/secrets@sha256:05e8567c4e4bdfaec379c3c2f867204b32b0226636b5380642d8d4f87a66ad93
+  allow_failure: false

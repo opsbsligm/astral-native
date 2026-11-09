@@ -1,0 +1,17 @@
+{
+  "_comment": "Hashes of what the build produces from a genuine Astral Chain 1.0.0 base game (no game data). tools/extract.py checks every step against them; a mismatch stops the build.",
+  "title_id": "01007300020FA000",
+  "version": 0,
+  "display_version": "1.0.0",
+  "program_nca": "f461a21db38cf0b7c8f03b9391518210.nca",
+  "exefs_sha256": {
+    "main": "74c14751a2e48d4a5da06b18164fb7b2104863dae604774bb190b0105ac457d4",
+    "main.npdm": "0e131d00ba51dce5535108a42ffab0037194d9aef27bcb76da765b824d64adf6",
+    "rtld": "52735462296339700ae8c54b3d84f8fd0d96113a313a15a4e0a6973ec63dffb4",
+    "sdk": "d58f76a49d32c1a8192befc8cd6341e45d802eade3a474f7117a842232446d7e"
+  },
+  "romfs": {
+    "size": 10309560892,
+    "sha256": "cdfb704316ebb0396bbc78062a55da7527f21092f6205ceb5eaa2bfa0bd13dd8"
+  }
+}

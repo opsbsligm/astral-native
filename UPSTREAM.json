@@ -1,0 +1,14 @@
+{
+  "repository": "https://github.com/captainj-sparrow/astral-chain-pc-recomp",
+  "commit": "194e06699c08c5415051ab73c251354def2c029e",
+  "tag": "1.5.0",
+  "license": "MIT",
+  "game_version": "1.0.1 (base 1.0.0 + update 1.0.1)",
+  "title_id_base": "01007300020FA000",
+  "title_id_update": "01007300020FA800",
+  "pipeline": "totk-pc-recomp (LLVM AArch64->x86-64 static recompile, Vulkan)",
+  "game_content_included": false,
+  "deck_status_upstream": "Linux plays at 60fps on RADV; Steam Deck itself NOT verified; not optimized for 4GB VRAM",
+  "pinned_at": "2026-11-09",
+  "note": "上游 1.5.0 发布日 2026-11-09，含 1.4.3 性能更新与 FOV 滑块。调研快照 v1.1.0(755fbc8) 已过时，以本 tag 为准。"
+}

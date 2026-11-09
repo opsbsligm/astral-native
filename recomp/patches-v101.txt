@@ -1,0 +1,241 @@
+# Code patch table for Astral Chain 1.0.1 (main build 4b159f0f7a360669738390ee8657b4f0).
+# The spin waits below were found by tools/spin_waits.py on the update's ExeFS; recomp/gen.py checks every
+# head and back-edge against the module before it emits anything.
+
+# main: 32 spin waits
+spin main 3e0724 3e0728   # 2 instructions; loads
+spin main 3e39d8 3e39dc   # 2 instructions; loads
+spin main 3e3e74 3e3e78   # 2 instructions; loads
+spin main 3e415c 3e4160   # 2 instructions; loads
+spin main 4be7fc 4be88c   # 6 instructions; loads
+spin main 5009ac 5009c8   # 5 instructions; loads
+spin main 500ac0 500adc   # 5 instructions; loads
+spin main 5317d4 5317f0   # 5 instructions; loads
+spin main 586314 586318   # 2 instructions; loads
+spin main 73a40c 73a448   # 16 instructions; loads
+spin main 7a7208 7a7210   # 3 instructions; loads
+spin main 7a76c8 7a76d0   # 3 instructions; loads
+spin main 7a7784 7a778c   # 3 instructions; loads
+spin main 7afec8 7afed0   # 3 instructions; loads
+spin main 7b0018 7b0020   # 3 instructions; loads
+spin main 7b00e0 7b00e8   # 3 instructions; loads
+spin main 7b0288 7b0290   # 3 instructions; loads
+spin main 7b0320 7b0328   # 3 instructions; loads
+spin main 7b04c0 7b04c8   # 3 instructions; loads
+spin main 7b07e8 7b07f0   # 3 instructions; loads
+spin main 7b0950 7b0958   # 3 instructions; loads
+spin main 7cdacc 7cdb08   # 16 instructions; loads
+spin main 7fa0e4 7fa0ec   # 3 instructions; loads
+spin main 80a2d4 80a3f4   # 2 instructions; loads
+spin main 80a4f0 80a610   # 2 instructions; loads
+spin main 81b53c 81b544   # 3 instructions; loads
+spin main 81b9e8 81b9f0   # 3 instructions; loads
+spin main 81c71c 81c724   # 3 instructions; loads
+spin main 8254d4 8254dc   # 3 instructions; loads
+spin main 855894 855a50 855a64   # 36 instructions; loads
+spin main 87adb0 87ade8   # 14 instructions; loads
+spin main 9a8274 9a829c   # 5 instructions; loads
+
+# 1062p (no dynamic resolution): KeatonTheBot's pchtxt for 1.0.1. The pchtxt's @flag offset_shift 0x100 names module
+# offsets after the shift; these are those offsets. Width 0x760 = 1888, height 0x426 = 1062. Off by default: res1080
+# below takes the same sites (runtime/resolution.c game_res_pick keeps one of the two on).
+set  res1062 AC_RES1062 0
+site res1062 main 4328c0 5280c808 5280ec08   # mov w8, #1600 -> #1888 (render width)
+site res1062 main 4328c8 52807088 528084c8   # mov w8, #900 -> #1062 (render height)
+site res1062 main 40d5e4 5280c809 5280ec09   # mov w9, #1600 -> #1888 (docked)
+site res1062 main 40d5f0 52807089 528084c9   # mov w9, #900 -> #1062
+site res1062 main 40fb04 5280c809 5280ec09   # mov w9, #1600 -> #1888 (handheld)
+site res1062 main 40fb14 52807089 528084c9   # mov w9, #900 -> #1062
+site res1062 main 40f184 7119001f 711d801f   # cmp w0, #1600 -> #1888 (ladder)
+site res1062 main 40f188 52807088 528084c8   # mov w8, #900 -> #1062
+site res1062 main 40f1a4 321603e8 5280a008   # mov w8, #1024 -> #1280
+site res1062 main 40f1a8 5280b409 5280ec09   # mov w9, #1440 -> #1888
+site res1062 main 40f1ac 7119001f 711d801f   # cmp w0, #1600 -> #1888
+site res1062 main 40f1b0 52804ed4 52805a14   # mov w20, #630 -> #720
+site res1062 main 40f1b4 52806556 528084d6   # mov w22, #810 -> #1062
+site res1062 main 40f1d0 7119001f 711d801f   # cmp w0, #1600 -> #1888
+site res1062 main 40f1d8 1a880261 1a880001   # csel w1, w19, w8, eq -> w0 (level 2 docked width, as res1080)
+site res1062 main 9ed178 bc687920 1e2e1000   # ldr s0, [x9,x8,lsl #2] -> fmov s0, #1.0 (mipmap bias)
+
+# 1080p: the res1062 sites with 1920x1080 (0x780 x 0x438), as 1.0.0's res1080 set, the ladder's docked entries included,
+# so the scene stays at 1920x1080 whatever scale the dynamic-resolution logic picks. Each ladder level picks one size
+# when the scene target has the docked width and another when it has not; handheld (1280x720 targets, main+0x40d5a0)
+# always takes the second. Those two handheld entries (40f1a4 and 40f1b0) get res1062's 1280x720, the handheld targets'
+# own size: 1920x1080 there is larger than the targets the game made for handheld, the level's target is never
+# created, and loading a save in handheld read through its null texture in main+0x9d0df0 (issues #25 and #38).
+# Level 2's docked width is w19, which the function sets to the handheld 1280 before the ladder (main+0x40f128, also the
+# width of a 1280x720 target it makes there, so left alone): with the height raised to 1080 that level was 1280x1080,
+# and AC_SSAA=1440p made it 1707x1440, which lost the device on an RTX 5070 Ti (issue #51). 40f1d8 takes the scene
+# target's width (w0) instead, as level 0 does, so the level is 1920x1080 docked and keeps 800x720 in handheld.
+# res1062 gets the same site.
+# 1920x1080 is the engine's maximum (on
+# 1.0.0, 2048x1152 crashed its render-context setup). On by default: AC_SSAA's 1440p and 2160p are then exactly 4/3
+# and 2, the render-target sizes the Intel Arc 140T played for hours (other enlarged sizes, such as 1888x1062 x 4/3 =
+# 2517x1416, lost the device on entering play).
+set  res1080 AC_RES1080 1
+site res1080 main 4328c0 5280c808 5280f008   # mov w8, #1600 -> #1920 (render width)
+site res1080 main 4328c8 52807088 52808708   # mov w8, #900 -> #1080 (render height)
+site res1080 main 40d5e4 5280c809 5280f009   # mov w9, #1600 -> #1920 (docked)
+site res1080 main 40d5f0 52807089 52808709   # mov w9, #900 -> #1080
+site res1080 main 40fb04 5280c809 5280f009   # mov w9, #1600 -> #1920 (handheld)
+site res1080 main 40fb14 52807089 52808709   # mov w9, #900 -> #1080
+site res1080 main 40f184 7119001f 711e001f   # cmp w0, #1600 -> #1920 (ladder)
+site res1080 main 40f188 52807088 52808708   # mov w8, #900 -> #1080
+site res1080 main 40f1a4 321603e8 5280a008   # mov w8, #1024 -> #1280 (handheld, as res1062)
+site res1080 main 40f1a8 5280b409 5280f009   # mov w9, #1440 -> #1920
+site res1080 main 40f1ac 7119001f 711e001f   # cmp w0, #1600 -> #1920
+site res1080 main 40f1b0 52804ed4 52805a14   # mov w20, #630 -> #720 (handheld, as res1062)
+site res1080 main 40f1b4 52806556 52808716   # mov w22, #810 -> #1080
+site res1080 main 40f1d0 7119001f 711e001f   # cmp w0, #1600 -> #1920
+site res1080 main 40f1d8 1a880261 1a880001   # csel w1, w19, w8, eq -> w0 (level 2 docked width: 1920, not 1280)
+site res1080 main 9ed178 bc687920 1e2e1000   # ldr s0, [x9,x8,lsl #2] -> fmov s0, #1.0 (mipmap bias, as res1062)
+
+# Field of view (AC_FOV, runtime/resolution.c res_fov_live). A camera's lens (*(camera+0x58)) keeps the vertical view
+# angle at +0x27c (radians: 50 degrees in play, the shot's own in cutscenes), the aspect ratio at +0x278 and near / far
+# at +0x270 / +0x274. While the lens is dirty (+0x28c), main+0x9a3010 loads those four and builds the projection
+# matrix at lens+0x40 (bl main+0x9b28e0); main+0x9a3054 builds the same for a second target. The scene setup also
+# copies the angle into the render scene at +0x140 for its screen-size work (two copies of that sequence). Each site
+# multiplies the loaded or stored angle by the factor on page +60 (rt_fov_s0), so the projection, the culling built
+# from it and the screen sizes stay in step; while the game's cutscene flag is set the angle passes unscaled, so
+# cutscenes keep their framing. Off while AC_FOV is 100, so the camera code is the game's own.
+set  fov AC_FOV_PATCH 0
+site fov main 9a3010 bd427f00 bd427f00 @fn:rt_fov_s0   # ldr s0,[x24,#0x27c]; then s0 *= factor (projection)
+site fov main 9a3054 bd427d00 bd427d00 @fn:rt_fov_s0   # ldr s0,[x8,#0x27c]; then s0 *= factor (second target)
+site fov main 998b5c bd014260 @fn:rt_fov_s0 bd014260   # str s0,[x19,#0x140] -> s0 *= factor; the same store
+site fov main 998f90 bd014260 @fn:rt_fov_s0 bd014260   # str s0,[x19,#0x140] -> s0 *= factor; the same store
+
+# Dynamic frame rate for the 60 fps mode (the menu's AC_FPS: 30 = shipping 30 fps, 60 = 60 fps with the fix).
+# This replaces the community static 60 fps patch (MrComputerRevo's IPS, whose offsets count the 0x100-byte NSO header)
+# with the Dynamic mod v1.1.1's fixes for its two 60 fps bugs: the frame accumulator's low clamp drops to 1/16 (the
+# high clamp stays the original 2.0) so the floating step tracks real time; every input/action frame counter is scaled
+# by the whole-tick count (runtime/frame_rate.c) so its window lasts wall-clock time instead of whole 60 fps frames;
+# and the camera's per-frame smoothing blend becomes 1 - powf(1 - a, clamp(step, 0, 4)) so it converges at the same
+# rate whatever the frame rate. The frame call's second-vsync wait is still cleared; the present pacer (nvn_api_obj.c)
+# holds 60 fps. AC_FPS=30 runs the original instructions (the game's shipping 30 fps).
+set  fps60 FPS60 1
+site fps60 main 3e39d0 320003e0 52800001   # orr w0, wzr, #1 -> mov w1, #0 (frame call's vsync-wait argument)
+# frame accumulator low clamp 1.0 -> 1/16 (the high clamp is already the original 2.0)
+site fps60 main 91dc94 1e2e1001 52a7b008 1e270101   # fmov s1,#1.0 -> mov w8,#0x3d800000; fmov s1,w8
+site fps60 main 91dca0 1e2e1001 52a7b008 1e270101   # fmov s1,#1.0 -> mov w8,#0x3d800000; fmov s1,w8
+site fps60 main 91dcac 32091be8 52a7b008           # mov w8,#1.0f -> #1/16 (stored low clamp)
+# camera smoothing: the per-frame blend a becomes 1 - powf(1 - a, clamp(step, 0, 4))
+site fps60 main 3a2d40 1e2a5808 @fn:rt_fps_cam_s0
+site fps60 main 3a2d80 1e2a5828 @fn:rt_fps_cam_s1
+site fps60 main 3a2dc0 1e29cd48 @fn:rt_fps_cam_fcsel
+# step -> integer frame-count readers (fcvtzs/fcvtzu): read the whole-tick count instead of floor(step)
+site fps60 main 48be14 1e380008 @fn:rt_fps_ticks_w8   # fcvtzs w8,s0 -> w8 = whole ticks
+site fps60 main 57e7dc bd40d300 @fn:rt_fps_ticks_w8   # ldr s0,[x24,#0xd0] -> w8 = whole ticks
+site fps60 main 57e7e0 1e390008 34000188              # fcvtzu w8,s0 -> cbz w8, 0x57e810
+# input/action frame counters, scaled by the whole-tick count (subs wN,wN,#1 -> the hs helpers)
+site fps60 main 308a9c 71000508 @fnz:rt_fps_hs_w8   # combo cue
+site fps60 main 0e7f64 71000508 @fnz:rt_fps_hs_w8   # 15-count
+site fps60 main 0f7ce8 71000508 @fnz:rt_fps_hs_w8   # chain bind
+site fps60 main 0f8720 71000508 @fnz:rt_fps_hs_w8   # S3 15-count
+site fps60 main 0d5e28 71000508 @fnz:rt_fps_hs_w8   # S3 exact-zero
+site fps60 main 2828ac 71000508 @fnz:rt_fps_hs_w8   # short latch
+site fps60 main 283100 71000508 @fnz:rt_fps_hs_w8   # buffer
+site fps60 main 28311c 71000508 @fnz:rt_fps_hs_w8   # tap buffer (double-tap)
+site fps60 main 28759c 71000508 @fnz:rt_fps_hs_w8   # buffer
+site fps60 main 2875ac 71000508 @fnz:rt_fps_hs_w8   # buffer
+site fps60 main 2875bc 71000508 @fnz:rt_fps_hs_w8   # buffer
+site fps60 main 2875cc 71000508 @fnz:rt_fps_hs_w8   # buffer
+site fps60 main 2875dc 71000508 @fnz:rt_fps_hs_w8   # buffer
+site fps60 main 285464 71000508 @fnz:rt_fps_hs_w8   # queue window
+site fps60 main 283360 71000508 @fnz:rt_fps_hs_w8   # exact-zero
+site fps60 main 284ad4 71000508 @fnz:rt_fps_hs_w8   # window
+site fps60 main 286e38 71000508 @fnz:rt_fps_hs_w8   # window
+site fps60 main 286f98 71000508 @fnz:rt_fps_hs_w8   # window
+site fps60 main 287044 71000508 @fnz:rt_fps_hs_w8   # window
+site fps60 main 284af0 71000508 @fnz:rt_fps_hs_w8   # window
+site fps60 main 284bb8 71000508 @fnz:rt_fps_hs_w8   # window
+site fps60 main 284bf4 71000508 @fnz:rt_fps_hs_w8   # window
+site fps60 main 284b00 71000508 @fnz:rt_fps_hs_w8   # r5 window
+site fps60 main 288f40 71000529 @fnz:rt_fps_hs_w9   # lockout bank
+site fps60 main 288f5c 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 288f78 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 288f94 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 288fb0 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 288fcc 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 288fe8 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 289004 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 289020 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 28903c 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 289244 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 289260 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 28927c 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 289298 71000529 @fnz:rt_fps_hs_w9
+site fps60 main 2856f8 71000529 @fnz:rt_fps_hs_w9   # press window
+site fps60 main 283294 71000529 @fnz:rt_fps_hs_w9   # window
+site fps60 main 287738 71000529 @fnz:rt_fps_hs_w9   # r5 window
+site fps60 main 28783c 71000529 @fnz:rt_fps_hs_w9   # r5 window
+site fps60 main 283a94 7100054a @fnz:rt_fps_hs_w10  # lockout (subs w10,w10,#1)
+site fps60 main 287694 71000549 @fnz:rt_fps_hs_w10w9  # second-tap window, path A
+site fps60 main 287724 71000549 @fnz:rt_fps_hs_w10w9  # second-tap window, path B
+# r2 bank of buffer counters (sub w8,w8,#1, no flags)
+site fps60 main 283044 51000508 @fn:rt_fps_sub_w8
+site fps60 main 283054 51000508 @fn:rt_fps_sub_w8
+site fps60 main 283064 51000508 @fn:rt_fps_sub_w8
+site fps60 main 283074 51000508 @fn:rt_fps_sub_w8
+site fps60 main 283084 51000508 @fn:rt_fps_sub_w8
+site fps60 main 283094 51000508 @fn:rt_fps_sub_w8
+site fps60 main 2830a4 51000508 @fn:rt_fps_sub_w8
+site fps60 main 2830b4 51000508 @fn:rt_fps_sub_w8
+site fps60 main 2830c4 51000508 @fn:rt_fps_sub_w8
+site fps60 main 2830d4 51000508 @fn:rt_fps_sub_w8
+site fps60 main 2830e4 51000508 @fn:rt_fps_sub_w8
+site fps60 main 2830f4 51000508 @fn:rt_fps_sub_w8
+site fps60 main 283138 51000508 @fn:rt_fps_sub_w8
+site fps60 main 283148 51000508 @fn:rt_fps_sub_w8
+site fps60 main 283158 51000508 @fn:rt_fps_sub_w8
+site fps60 main 283168 51000508 @fn:rt_fps_sub_w8
+site fps60 main 283178 51000508 @fn:rt_fps_sub_w8
+site fps60 main 283188 51000508 @fn:rt_fps_sub_w8
+site fps60 main 283198 51000508 @fn:rt_fps_sub_w8
+site fps60 main 2831a8 51000508 @fn:rt_fps_sub_w8
+site fps60 main 2831b8 51000508 @fn:rt_fps_sub_w8
+site fps60 main 2831c8 51000508 @fn:rt_fps_sub_w8
+site fps60 main 2831dc 51000508 @fn:rt_fps_sub_w8
+# pad auto-repeat count, from AstralChain-Dynamic-FPS v1.1.1 (add w9,w9,#1, no flags)
+site fps60 main 9abf40 11000529 @fn:rt_fps_up_w9
+# hitstop manager's frame counters, from AstralChain-Dynamic-FPS v1.1.1
+site fps60 main 4f3d30 71000508 @fnz:rt_fps_hs_w8   # +0x38 delay
+site fps60 main 4f3d5c 71000508 @fnz:rt_fps_hs_w8   # +0x34 scale duration
+site fps60 main 4f3d98 71000508 @fnz:rt_fps_hs_w8   # +0x48 scale duration
+site fps60 main 4f3e64 71000508 @fnz:rt_fps_hs_w8   # +0x48, after +0x34 expires
+site fps60 main 4f3db0 71000508 @fnz:rt_fps_hs_w8   # +0x74 scale duration
+site fps60 main 4f3e78 71000508 @fnz:rt_fps_hs_w8   # +0x74, after +0x48 expires
+site fps60 main 4f3e4c 71000508 @fnz:rt_fps_hs_w8   # +0xa8 request suppression
+site fps60 main 4f3f04 71000508 @fnz:rt_fps_hs_w8   # +0xa8, other path
+site fps60 main 4f3f14 71000508 @fnz:rt_fps_hs_w8   # +0xa4 scale duration
+site fps60 main 4f3f3c 71000508 @fnz:rt_fps_hs_w8   # +0x54 scale duration
+site fps60 main 4f3f88 71000508 @fnz:rt_fps_hs_w8   # +0x54, after +0xa4 expires
+site fps60 main 4f3f54 71000508 @fnz:rt_fps_hs_w8   # +0x80 hold request delay
+site fps60 main 4f3fb0 71000508 @fnz:rt_fps_hs_w8   # +0x8c cue delay
+site fps60 main 4f41b0 71000508 @fnz:rt_fps_hs_w8   # +0xb4 window
+site fps60 main 4f4010 51000529 @fn:rt_fps_floor1_w9   # +0x8c, stays at 1 or above
+site fps60 main 4f4018 11000508 @fn:rt_fps_up_w8       # +0x84 freeze phase count
+site fps60 main 4f4070 bd4e1d01 bd4e1d01 @fn:rt_fps_ramp_s1   # +0x7c ramp: 1/60 a frame, times the ticks
+# player's deferred hitstop, from AstralChain-Dynamic-FPS v1.1.1
+site fps60 main 32cac8 71000529 @fnz:rt_fps_hs_w9   # +0x7e88
+site fps60 main 32cdc0 71000529 @fnz:rt_fps_hs_w9   # +0x7e94
+site fps60 main 32d0b8 71000529 @fnz:rt_fps_hs_w9   # +0x7e80
+# tap/hold and lockout counts, from AstralChain-Dynamic-FPS v1.1.1
+site fps60 main 286c2c 11000529 @fn:rt_fps_up_min1_w9  # +0xc50 tap/hold count: on release 1..9 is a tap, 10 or more a hold
+site fps60 main 2846f0 1100052a @fn:rt_fps_up_w9w10    # +0x46b62c lockout count: ends at 15
+# rumble channel counts, from AstralChain-Dynamic-FPS v1.1.1
+site fps60 main 9abc68 71000509 @fnz:rt_fps_rumble_w8w9
+site fps60 main 9abc7c 7100052a @fnz:rt_fps_rumble_w9w10
+site fps60 main 9abcc0 7100052a @fnz:rt_fps_rumble_w9w10
+site fps60 main 9abd34 7100052a @fnz:rt_fps_rumble_w9w10
+site fps60 main 9abcdc 7100052a @fnz:rt_fps_rumble_w9w10
+site fps60 main 9abd50 7100052a @fnz:rt_fps_rumble_w9w10
+site fps60 main 9abdd0 7100052a @fnz:rt_fps_rumble_w9w10
+site fps60 main 9abd6c 7100052a @fnz:rt_fps_rumble_w9w10
+site fps60 main 9abdec 7100052a @fnz:rt_fps_rumble_w9w10
+site fps60 main 9abe8c 7100052a @fnz:rt_fps_rumble_w9w10
+# per-object clock scale's delay and duration (armed at 91d6a0), from AstralChain-Dynamic-FPS v1.1.1
+site fps60 main 91de50 71000610 @fnz:rt_fps_hs_w16        # +0x34 delay
+site fps60 main 91dee8 71000610 @fnz:rt_fps_duration_w16  # +0x30 duration
+# sibling paths of two input counters above, from AstralChain-Dynamic-FPS v1.1.1
+site fps60 main 0d5dd4 71000508 @fnz:rt_fps_hs_w8   # +0x2024, sibling of 0d5e28
+site fps60 main 2876d4 71000508 @fnz:rt_fps_hs_w8   # +0x14d4, sibling of 28759c
