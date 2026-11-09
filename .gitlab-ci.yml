@@ -26,7 +26,8 @@ native-unit:
   needs: []
   image: native-games/toolchain:199fb078c5ce818f099c
   before_script:
-    - python3 -m pip install --quiet -r tools/requirements-installer.txt
+    - python3 -m pip install --target "$CI_PROJECT_DIR/out/extra-pkgs" --quiet -r tools/requirements-installer.txt
+    - export PYTHONPATH="$CI_PROJECT_DIR/out/extra-pkgs"
   script:
     - python3 tests/spin_waits_test.py -v
     - python3 tests/pack_shader_cache_test.py -v
