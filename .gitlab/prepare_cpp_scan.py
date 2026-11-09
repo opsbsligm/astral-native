@@ -19,12 +19,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compdb', type=Path, required=True)
     parser.add_argument('--build', type=Path, required=True)
+    parser.add_argument('--gen', type=Path, required=True, help='generated-layout dir (layout.h) on the compile include path')
     parser.add_argument('--deps', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     project = Path(os.environ['CI_PROJECT_DIR']).resolve()
-    build, output = args.build.resolve(), args.output.resolve()
-    if not build.is_relative_to(project) or not output.is_relative_to(project):
+    build, gen, output = (path.resolve() for path in (args.build, args.gen, args.output))
+    if not build.is_relative_to(project) or not gen.is_relative_to(project) or not output.is_relative_to(project):
         parser.error('Keep public analysis outputs under the CI checkout')
     if output.exists():
         parser.error('Use a fresh analysis output directory')
@@ -51,7 +52,13 @@ def main():
         languages[language] = [Path(line.strip()).resolve() for line in section.splitlines()
                                if line.strip() and Path(line.strip()).resolve() != resource]
     unique = list(dict.fromkeys(p for paths in languages.values() for p in paths))
-    mappings = {str(build): str(output / 'generated')}
+    # The generated layout (layout.h) is emitted into --gen, on the runtime include path (-I out/gen/v101); forward
+    # its headers and remap that path, or the analyzer cannot resolve the runtime units' #include "layout.h".
+    # The compile database carries repo-relative paths (ninja compdb), so map both spellings of each directory.
+    mappings = {str(build): str(output / 'generated'), str(gen): str(output / 'gen')}
+    for source_dir, target_dir in ((build, 'generated'), (gen, 'gen')):
+        if source_dir.is_relative_to(project):
+            mappings[source_dir.relative_to(project).as_posix()] = str(output / target_dir)
     native = args.deps.resolve() / 'include'
     if native.is_dir():
         shutil.copytree(native, output / 'sdk/native')
@@ -64,6 +71,11 @@ def main():
     for path in build.rglob('*'):
         if path.is_file() and path.suffix in ('.h', '.inc'):
             target = output / 'generated' / path.relative_to(build)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(path, target)
+    for path in gen.rglob('*'):
+        if path.is_file() and path.suffix in ('.h', '.inc'):
+            target = output / 'gen' / path.relative_to(gen)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(path, target)
 
