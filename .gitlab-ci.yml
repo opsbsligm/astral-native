@@ -18,13 +18,13 @@ default:
 
 content-check:
   needs: []
-  image: python:3.12
+  image: native-games/toolchain:199fb078c5ce818f099c
   script:
     - python3 tools/check_content.py
 
 native-unit:
   needs: []
-  image: python:3.12
+  image: native-games/toolchain:199fb078c5ce818f099c
   script:
     - python3 tests/spin_waits_test.py -v
     - python3 tests/pack_shader_cache_test.py -v
