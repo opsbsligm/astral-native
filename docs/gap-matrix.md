@@ -58,3 +58,17 @@
 4. **优先切片**（对齐 G2 阶段）：先 Deck 实机跑通 1.5.0（60fps+DECK档）→确认帧率/ASTC decode 代价→再按 B3/B4/D1 移植图示/控制栏/金手指。
 
 > 静态核验基于 1.5.0 源码；`Deck未验` 项一律 hardware_validated=false，待 Deck 实机补齐。
+
+## F. 竞品吸收（与两塞尔达子矩阵同步，2026-11-10）
+
+竞品调研（Savage Wind / sigma·totk-recomp / valentderah totk-pc-recomp / MacNativeGames）筛出 5 项可吸收能力，两塞尔达已各建独立子矩阵（botw-native/docs/competitor-adoption.md、totk-native/docs/competitor-adoption.md，5 项 hardware_validated=false）。本仓作为第三作，同样列为对标缺口，验收口径一致（Deck 实跑截图+配置读回）：
+
+| # | 能力 | 上游状态 | 差距 |
+|---|------|---------|------|
+| F1 | shader 后台预热（不阻塞首入场景） | 部分 | 上游 shader 在 install 期预编译（"Shaders prepared at install"），无"游戏中首入场景后台继续"运行时预热；需对照两塞尔达 CA1 补后台不阻塞路径 |
+| F2 | >30fps 衍生界面 bug（快速菜单/游戏结束） | 部分 | 上游 60fps 默认+cutscene speed fix，但已知 60fps 突进攻击输入计时 bug（第4幕需临时 30fps）；快速菜单/游戏结束在 60 帧未逐项核对，需对照 CA2 用 romfs overlay 同法修 |
+| F3 | 画面页 FOV/阴影分辨率/各向异性16x | 部分 | 上游 FSR1+ssaa+16x 各向异性已声明（README "Anisotropic texture filtering up to 16x"），FOV 滑块/阴影分辨率档位未见；需对照 CA3 暴露/补齐 |
+| F4 | mods 系统（RomFS+ExeFS 代码补丁+HD 贴图包） | 部分 | 上游有 per-mod 模拟器格式 mods（`mods/<mod>/`），但 ExeFS `.ips`/`.pchtxt` 自动重编译、HD 贴图堆自动扩容未见；需对照 CA4 统一 |
+| F5 | 144fps 实验档 + F10 性能浮层 | 部分 | 上游有 F10 性能覆盖层（README "performance overlay (F10)"）+60/30 切换，144 实验档未见；需对照 CA5 对齐 |
+
+DLSS（仅 RTX）、HDR10（Deck 不支持）同两塞尔达口径：PC 端有价值 / Deck 暂缓，不做。
