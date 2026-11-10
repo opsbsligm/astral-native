@@ -23,7 +23,7 @@ default:
 native-unit:
   needs: []
   tags: [native-games]
-  image: native-games/toolchain:199fb078c5ce818f099c
+  image: native-games/toolchain:02b1aa2ee13b00c30b38
   before_script:
     # The toolchain image ships no Python deps (runs as uid 1001; /opt/venv is root-owned).
     # tools/extract.py needs cryptography+cffi+pycparser; the tests import installer steps that import extract.
@@ -42,7 +42,7 @@ native-build:
     - job: secret_detection
       artifacts: false
   tags: [native-games]
-  image: native-games/toolchain:199fb078c5ce818f099c
+  image: native-games/toolchain:02b1aa2ee13b00c30b38
   script:
     - mkdir -p out/home
     - export HOME="$CI_PROJECT_DIR/out/home"
