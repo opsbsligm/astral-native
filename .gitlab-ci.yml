@@ -25,10 +25,14 @@ native-unit:
   tags: [native-games]
   image: native-games/toolchain:02b1aa2ee13b00c30b38
   before_script:
-    # The toolchain image ships no Python deps (runs as uid 1001; /opt/venv is root-owned).
-    # tools/extract.py needs cryptography+cffi+pycparser; the tests import installer steps that import extract.
+    # /opt/venv in the toolchain image is root-owned and strips the pip module, so `python3 -m pip`
+    # and `ensurepip --user` both fail under CI uid 1001. Use the distro-shipped pip wheel directly:
+    # pointing PYTHONPATH at the wheel puts `pip` on the import path without writing anywhere.
+    # tools/extract.py needs cryptography+cffi+pycparser; the tests import installer steps that
+    # import extract. capstone/lz4/unicorn already ship in /opt/venv (system site-packages).
+    - export PYTHONPATH="/usr/share/python-wheels/pip-24.0-py3-none-any.whl"
     - python3 -m pip install --target "$CI_PROJECT_DIR/out/extra-pkgs" --quiet -r tools/requirements-installer.txt
-    - export PYTHONPATH="$CI_PROJECT_DIR/out/extra-pkgs"
+    - export PYTHONPATH="/usr/share/python-wheels/pip-24.0-py3-none-any.whl:$CI_PROJECT_DIR/out/extra-pkgs"
   script:
     - python3 tools/check_content.py
     - python3 tests/spin_waits_test.py -v
