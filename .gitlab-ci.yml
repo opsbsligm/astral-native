@@ -6,6 +6,10 @@ include:
   - template: Jobs/Dependency-Scanning.v2.gitlab-ci.yml
     inputs:
       allow_failure: false
+      # The committed lock already resolves all three manifests. Keep the real
+      # scanner and SBOM coverage gate; do not run a second mutable resolution.
+      disabled_resolution_jobs: "python"
+      resolution_jobs_allow_failure: false
       max_scan_depth: -1
       pipcompile_lockfile_file_name_pattern: "pipcompile.lock.txt"
 
