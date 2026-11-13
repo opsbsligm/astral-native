@@ -3042,17 +3042,27 @@ static void lb_warm_worker(void *arg) {
 }
 
 // Preparation: every variant of <dir>/shader-prepared.bin on every core at normal priority.
-static void lb_warm_prepared(const char *dir) {
+static int lb_warm_prepared(const char *dir) {
     char path[PLAT_PATH_MAX * 2 + 32];
     snprintf(path, sizeof path, "%s/shader-prepared.bin", dir);
     uint64_t size = 0;
     uint8_t *f = plat_file_read(path, &size);
-    size_t n = f && size >= 16 ? (size_t)(size - 16) / 36 : 0;
-    LB.e = n ? calloc(n, sizeof *LB.e) : NULL;
+    uint32_t version = 0, record_size = 0;
+    if (f && size >= 16) memcpy(&version, f + 8, 4), memcpy(&record_size, f + 12, 4);
+    if (!f || size <= 16 || memcmp(f, "ACSPRP\0\0", 8) || version != 1 || record_size != 36 || (size - 16) % 36) {
+        rt_log("vk_pipeline: preparation needs a complete, nonempty %s", path);
+        free(f);
+        return 1;
+    }
+    size_t n = (size_t)(size - 16) / 36;
+    LB.e = calloc(n, sizeof *LB.e);
     for (size_t i = 0; LB.e && i < n; i++)
         memcpy(LB.e[i].iid, f + 16 + 36 * i + 4, 32), LB.e[i].stage = f[16 + 36 * i], LB.e[i].prio = f[16 + 36 * i + 1];
     free(f);
-    if (!LB.e) return;
+    if (!LB.e) {
+        rt_log("vk_pipeline: cannot allocate prepared shader variants");
+        return 1;
+    }
     skip_init(dir);
     char jp[PLAT_PATH_MAX * 2 + 48];
     snprintf(jp, sizeof jp, "%s/shader-prepare-journal.bin", dir);
@@ -3069,20 +3079,27 @@ static void lb_warm_prepared(const char *dir) {
     for (int i = 0; i < k; i++) plat_thread_join(t[i]);
     if (SK.journal) plat_file_close(SK.journal), SK.journal = NULL, plat_file_delete(jp);   // every build returned
     lb_report("preparation done");
-    // with gpl off only compute variants are built: say so, rather than count the skipped ones as built
-    unsigned long long skipped = LB.skipped;
-    size_t tried = n - (size_t)skipped;
+    // Count successful builds and existing libraries, not the records merely visited.
+    unsigned long long built = 0, failed = 0, skipped = LB.skipped;
+    for (int i = 0; i < 3; i++) {
+        built += LB.built[i] + LB.have[i] + LB.warmed[i];
+        failed += LB.fail[i];
+    }
+    int complete = LB.done == n && built > 0 && built + LB.nolib + skipped == n && !failed && !LB.noshader;
+    printf("prepare-shaders: %llu variants built into the driver cache on %d threads in %.0f ms (%zu requested)\n",
+           built, k, now_ms() - LB.t0, n);
     if (LB.nolib)
-        printf("prepare-shaders: %zu variants on %d threads in %.0f ms, %llu vertex/fragment variants skipped (graphics "
-               "pipeline library off, they build at their first draw)\n", tried, k, now_ms() - LB.t0,
-               (unsigned long long)LB.nolib);
-    else
-        printf("prepare-shaders: %zu variants built into the driver cache on %d threads in %.0f ms\n", tried, k,
-               now_ms() - LB.t0);
+        printf("prepare-shaders: %llu vertex/fragment variants skipped (graphics pipeline library off, they build at "
+               "their first draw)\n", (unsigned long long)LB.nolib);
+    if (!complete)
+        fprintf(stderr, "prepare-shaders: incomplete driver warm-up: %llu failed, %llu missing, %llu without a graphics "
+                "pipeline library, %llu skipped; %llu/%zu built\n", failed, (unsigned long long)LB.noshader,
+                (unsigned long long)LB.nolib, skipped, built, n);
     if (skipped)   // installer/steps.py Prepare reads this line
         printf("prepare-shaders: %llu variants skipped: the graphics driver crashed while building them in an earlier "
                "run (shader-prepare-skip.txt); they build at their first draw\n", skipped);
     free(LB.e), LB.e = NULL, LB.n = 0, LB.next = 0, LB.done = 0, LB.skipped = 0;
+    return complete ? 0 : 1;
 }
 
 // totk.exe --prepare-shaders (tools/prepare_shaders.py): the device sets the translator's host answers (they are in every
@@ -3099,7 +3116,7 @@ int vk_pipeline_prepare_shaders(void) {
     const char *pe = cfg_get("AC_PREWARM_XLATE");   // no fixed default: half the CPUs, at most 16, when unset
     int procs = pe && *pe ? atoi(pe) : cpus / 2 > 16 ? 16 : cpus / 2;
     int rc = gfx_shader_prepare_seed(dir, cpus, procs < 1 ? 1 : procs);
-    if (!rc) lb_warm_prepared(dir);
+    if (!rc) rc = lb_warm_prepared(dir);
     return rc;
 }
 
@@ -3120,8 +3137,7 @@ int vk_pipeline_warm_shaders(void) {
         fprintf(stderr, "warm-shaders: no %s (tools/prepare_shaders.py writes it)\n", prp);
         return 1;
     }
-    lb_warm_prepared(dir);
-    return 0;
+    return lb_warm_prepared(dir);
 }
 
 // ---- dynamic state

@@ -147,10 +147,10 @@ folder. The folder holds code and data derived from your game: for your own mach
 
 ## Linux (in progress)
 
-The runtime builds and runs on x86-64 Linux with a window, input and menu on SDL3 (`*_sdl.c`) in place of the Win32
-files (`*_win.c`); `runtime/platform/linux.c` implements `platform.h`. Status: the selftest and the probes pass; 1.2.1
-plays at 60 fps on RADV (RX 7800 XT) and NVIDIA (RTX 3060); 1.4.3 builds, probes and plays on RADV (RX 6600, and the
-Vega 7 of a Ryzen 5 4600G at about 34 fps). Long play sessions and the Steam Deck itself are not verified yet.
+Linux 宿主路径使用 SDL3（`*_sdl.c`）及 `runtime/platform/linux.c`。
+公开 CI 构建不带游戏资源的 runtime 静态库；Astral Chain 1.0.1 的完整游戏、探针与
+Steam Deck 长时运行仍需私有实测。本节继承的内存路径说明和性能数字来自上游 TOTK，
+不能作为 Astral Chain 帧率或稳定性的验证结果，`hardware_validated=false`。
 
 Requirements:
 
@@ -166,7 +166,7 @@ Requirements:
   Vulkan Memory Allocator is a single header (AUR `vulkan-memory-allocator`). Without it, `build_game.py` fetches the
   version the Windows release pins (3.4.0) into `toolchain/vma/` on first use and checks its hash.
 
-The steps are the Windows ones with POSIX paths: `.venv/bin/python` in place of `.venv\Scripts\python`, and `totk` in
+The steps are the Windows ones with POSIX paths: `.venv/bin/python` in place of `.venv\Scripts\python`, and `astralchain` in
 place of `astralchain.exe`. `build_game.py` takes clang, lld and Ninja from PATH (or the ones in `<dir>/bin` with
 `--toolchain <dir>`) and links against the system libraries, with `libstdc++` static and an `$ORIGIN` rpath;
 `build_hactool.py` builds `hactool` with make. `tools/prepare_shaders.py` reads the recorded shader variants from
@@ -210,7 +210,7 @@ change passes these, all run with `.venv`:
 | `tests\diff\func.py` | whole functions as the generator emits them, loops, jump tables and calls included (calls go to a stub that checks the registers at the call) | yes |
 | `tests\flags_check.py` | the function-local flag helpers of `runtime\cpu.h` against its packed ones | no |
 | `tests\excl_mt.py` | the exclusive monitor helpers under contention and ABA, on several threads | no |
-| `tests\jumptables_check.py` | `recomp/jumptables.py` against a Unicorn oracle; must report 0 disagreements, on 1.4.3 too | yes |
+| `tests\jumptables_check.py` | `recomp/jumptables.py` against a Unicorn oracle; must report 0 disagreements on the selected Astral Chain input | yes |
 
 A `--cpu v2` build passes the same differential tests with `--cflags=-march=x86-64-v2`; they compile `runtime/fma.c`
 too, so they check the software fma the v2 build links rather than the C runtime's.
@@ -228,3 +228,19 @@ to `build\<ver>\shaders\` and runs it through the translator and `spirv-val`; fa
 
 - Ghidra 12.1.2 with Adubbz's Ghidra-Switch-Loader in `toolchain\ghidra\` (JDK 21) opens the game modules (NSO).
 - `tools\fetch_refs.sh` clones the upstream projects this port builds on into `refs\`, read-only.
+
+
+## Shader preparation integrity
+
+The native `--prepare-shaders` command requires nonempty, complete seed records and a resolved translation for every
+requested seed. Invalid, truncated or unresolved input returns nonzero without replacing an existing prepared index.
+`--warm-shaders` validates the prepared index format and propagates missing translations or GPU build failures.
+The reported built count includes successful builds and already available libraries; visited records are not builds.
+Explicit driver skip entries and unavailable graphics pipeline libraries retain their reported fallbacks. A run that
+builds no variants fails even when every record was skipped.
+
+Runtime acceptance uses an isolated writable cache with the package and player data read-only. Establish a successful
+native preparation first, then verify that header-only program seeds and truncated answer records fail while preserving
+the prepared index byte for byte. Temporarily hide only that isolated translation cache and verify that `--warm-shaders`
+fails with zero builds. Restore the inputs and check that all requested variants prepare again. Keep the native counters,
+exit codes and content digests with the exact source and toolchain identities. These checks do not validate gameplay FPS.

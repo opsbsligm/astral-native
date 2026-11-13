@@ -1,6 +1,6 @@
 """Condense the AC_TRACE=perf and AC_TRACE=sched lines of a game log over a frame window.
 
-    python tools/perf_summary.py build/v121/logs/fight.log 1560 2600
+    python tools/perf_summary.py build/v101/logs/fight.log 1560 2600
 
 `mem: dirty` lines (vk_memory.c dirty census) are summarised per pool class (CPU_CACHED, CPU_UNCACHED, other): what
 a device-local mirror of buffer-bound pools would upload per frame and per submit, FlushMappedRange use, mirror size.

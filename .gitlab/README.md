@@ -1,21 +1,33 @@
-# CI 资产（对齐 totk/botw 门禁）
+# CI 资产与验证边界
 
-本目录与 `totk-native`、`botw-native` 的同名资产同源，按游戏构建方式做了最小适配。
+本目录复用两塞尔达的扫描资产，并按 Astral Chain 的构建方式适配。
 
-## 当前由 `.gitlab-ci.yml` 使用
+- `prepare_cpp_scan.py` 从真实 runtime 构建的编译数据库提取 C/C++ 翻译单元，
+  复制并重映射 SDK 头；`unpack_cpp_scan.py` / `run_cpp_scan.py` 检查实际扫描覆盖率。
+- `fetch_toolchain.rb` 按 `toolchain.env` 下载本项目的通用包，核验完整 SHA-256。
+  当前固定为实际构建使用的 `02b1aa2ee13b00c30b38`，不是 TOTK 的另一套 SDK。
+  `run_container_scan.rb` 保留完整诊断、漏洞报告和 SBOM，失败不能被日志管道吞掉。
+- `generate_scan_lock.sh` 合并三份真实依赖清单：`tools/requirements.txt`、
+  `tools/requirements-installer.txt`、`tools/requirements-py314.txt`。
+  使用 Python 3.12、pip 26.3、pip-tools 7.6.2 真实解析版本，再由
+  `generate_scan_lock.py` 从 PyPI 官方 HTTPS 版本元数据获取各平台安装包的摘要，生成
+  `.gitlab/pipcompile.lock.txt`。这不代表已下载或运行所有平台安装包；安装时仍须核验摘要。
+  维护命令只在获准远端的固定 Linux/Python 3.12 SDK 容器执行。脚本在
+  `out/dependency-lock/` 新建独立会话目录，pip 工具、缓存和临时输入统一放入其中，
+  退出时清理，最终哈希锁保留在仓库；不会向宿主或 SDK 全局安装工具。
+- `check_dependency_coverage.py` 拒绝遗漏清单、版本冲突、无摘要锁文件以及未支持的语法。
+  扫描后逐包核对 SBOM，范围包含锁中的传递依赖；缺包、错版本或缺 SBOM 都使 CI 失败。
 
-- `prepare_cpp_scan.py` — astral 构建用 `tools/build_game.py` + `ninja -t compdb`（无 runtime.log），
-  直接从 compile_commands.json 取参数；过滤 `.o` 与 archive 边，仅转发 `.c/.cpp` 运行时源。
-  系统 SDK 头与 `$NATIVE_DEPS/include` 拷贝到 `out/cppscan/sdk/` 并重映射，
-  分析器自带 clang 保持为记录编译器（与 totk 同策略）。
-- `unpack_cpp_scan.py` / `run_cpp_scan.py` / `sast-ruleset.toml` / `clangsa-resources.yml` — 与 totk 一致。
+Python 3.12 的解析锁用于扫描统一依赖清单，不代表 Windows/Python 3.14 环境已实测。
+按 [GitLab 已有解析锁的配置路线](https://docs.gitlab.com/user/application_security/dependency_scanning/migration_guide_to_sbom_based_scans/)，
+`disabled_resolution_jobs: python` 仅避免模板再次解析并覆盖既有锁；实际依赖漏洞扫描和
+SBOM 覆盖门禁继续强制失败。模板解析作业默认允许失败，不能把它误计为强制安全门禁。
+锁文件保留固定扫描器要求的第二行 pip-compile 标记，并复制到清单所在的
+`tools/pipcompile.lock.txt`。`DS_ENABLE_MANIFEST_FALLBACK=false` 禁止解析失败后静默退回
+只扫描直接依赖。标记要求见 [GitLab 固定扫描器源码](https://gitlab.com/gitlab-org/security-products/analyzers/dependency-scanning/-/blob/cd0ebcc7e66002d96711bddf9d8e6b5047d6adf3/scanner/common/common.go)。
+容器扫描覆盖 SDK 系统与语言依赖；源码扫描和 CI 成功均不能证明零漏洞或游戏实机可玩。
+游戏资源、密钥、派生代码及私有包不进入公开仓库或普通 CI 制品。
 
-## 下一 MR 启用（见 docs/ci-roadmap.md）
-
-- `fetch_toolchain.rb` / `prepare_scanner_cache.rb` / `run_container_scan.rb` / `toolchain.env`
-  — container_scanning 扫描 CI 工具链镜像。启用前需在本项目登记 `native-toolchain` 通用包
-  （`toolchain.env` 的 version/sha256 届时指向 p23 自己的包）。
-- `check_dependency_coverage.py` / `generate_scan_lock.sh`
-  — dependency-scanning 需要 `requirements-build.lock` 与 `.gitlab/pipcompile.lock.txt`。
-  astral 的 CI 构建路径（build_game.py/check_content.py/romfs_index.py）目前是纯标准库，
-  登记 pip 锁前 dependency-scanning 无输入可扫，故与 container_scanning 一起放到下一 MR。
+The coverage gate uses the scanned lockfile components in the SBOM metadata. GitLab can display a tracked
+`requirements.txt` as the input location even when it parsed the adjacent generated lockfile. That display path is not
+a substitute for lockfile evidence: complete package lists with only manifest evidence still fail coverage.

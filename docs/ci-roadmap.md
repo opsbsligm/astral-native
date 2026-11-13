@@ -1,14 +1,18 @@
-# CI 路线图
+# CI 门禁与后续验收
 
-首版（本仓已启用）：
-- `content-check`：上游 `tools/check_content.py` 全量校验，游戏派生内容/密钥/生成代码不得入公仓。
-- `native-unit`：不依赖游戏文件的纯 Python 单元（spin_waits 8、pack_shader_cache 5、installer 36）。
-- `secret_detection`：GitLab Secret Detection（与 totk/botw 同镜像）。
+配置包含内容守卫、无游戏资源单元测试、真实 Linux runtime 静态库构建、密钥扫描、
+Semgrep、Advanced SAST、基于真实编译数据库的 C/C++ 扫描、SDK 容器扫描、依赖扫描和
+SBOM 覆盖检查。所有适用安全作业均不允许失败；配置存在不等于当前提交已经通过，
+交付时应检查精确 HEAD 及合并后 main 的实际流水线结果。
 
-下一 MR（对齐 totk/botw 完整门禁）：
-1. `native-build`：Linux clang 构建 runtime（`tools/build_game.py` 自测 `--selftest`，需 clang/lld/sdl3/vulkan 工具链镜像 `native-games/toolchain:*`），产物含链接审计。
-2. `gitlab-advanced-sast` + `gitlab-advanced-sast-cpp`（compile_commands）+ `semgrep-sast`：复用 totk `.gitlab/prepare_cpp_scan.py` 资产。
-3. `container_scanning`（扫描工具链镜像）+ `dependency-scanning`/`dependency-coverage`（pip 依赖锁，需先落 astral 的 pipcompile.lock.txt）。
-4. 远端 Runner 仅调度 Mac mini（Apple Silicon）/2018 MacBook Pro（Intel），禁用日用 Mac。
+SDK 固定为 `native-games/toolchain:02b1aa2ee13b00c30b38`，容器扫描读取项目 23
+登记的同版本通用包并核验完整摘要。三份 Python 清单共同生成哈希锁；门禁核对直接
+依赖版本和全部已解析依赖的 SBOM，不能以两份手写锁相同代替完整性检查。
+实现与维护命令见 [.gitlab/README.md](../.gitlab/README.md)。
 
-工具链说明：上游 Linux 构建需 clang+lld+ninja+sdl3+opus+libvpx+zstd+vulkan-headers+shaderc+spirv-tools（docs/building.md "Linux" 节）；shader 翻译器（.NET）在 Deck 侧构建时用 `prepare_shaders.py` 读预录制答案。
+执行仅限获准远端 Mac mini / Intel Mac 的对应 Runner；日用 Mac 只编辑与编排。
+构建、测试、扫描和作业存储收尾分别验收，终态作业的有效证据交付后清理临时内容。
+
+公开 CI 只构建不需要游戏资源的 runtime。完整游戏 AOT、Linux 依赖打包、Deck 启动、
+ASTC 画面、输入/QTE、三级触屏栏、Amiibo、金手指及长时稳定性属于后续私有验收，
+不因此处绿色而标为完成；当前 `hardware_validated=false`。

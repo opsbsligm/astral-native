@@ -4,15 +4,20 @@
 管线：totk-pc-recomp（LLVM AArch64→x86-64 静态重编译 + Vulkan），与 TOTK 同管线，复用度高。
 验收标准：沿用两塞尔达的 97 项矩阵（18 基线 + 63 计划 + 16 盲区）与输入契约（世界玩法原语义 / 菜单 A确认 B取消 / Deck 图示随绑定 / 三级触屏 chrome）。
 
+原始标准的逐项定义与来源摘要已固化到 [standard-register.json](acceptance/standard-register.json)。
+97 条中 84 条适用于异界锁链，13 条为战神/血源专属场景，作为参考保留原 ID；
+这些参考项不计作异界锁链验收通过。适用项尚未挂接精确构建与实测证据，统一保持 `not_run`。
+本表“上游有实现”也不等于标准已通过，当前 `hardware_validated=false`。
+
 状态标记：`有`=上游已具备且静态核验；`部分`=存在但需适配/实机确认；`缺`=需移植或新做；`Deck未验`=存在但上游明确未在 Deck 验证。
 
 ## A. 执行路径与平台
 | # | 能力 | 上游状态 | 证据 | 对齐两塞尔达标准的差距 |
 |---|------|---------|------|----------------------|
-| A1 | 原生 x86-64（AOT，非模拟） | 有 | AGENTS.md、docs/architecture.md | 达标，需在 Deck 实机确认进程/热点 |
-| A2 | Vulkan 渲染（NVN→Vulkan） | 有 | runtime/vk_*.c | 达标；Deck 用 RADV（Van Gogh）需实机 |
-| A3 | Linux/SDL3 运行（非仅 Windows） | 部分 | docs/building.md:148 "Linux (in progress)"；1.4.3 在 RADV RX6600/VEGA7 可玩 | 上游明确"Steam Deck 本身未验证"→ 需 Deck 实测 |
-| A4 | Steam Deck 设备档案自动识别 | 有 | cfg.c:293 on_steam_deck()（DMI Valve/Jupiter/Galileo 或 SteamDeck=1） | 达标；DECK[] 档自动套 handheld/1280x800/30fps/ASTC→BC1/512MiB |
+| A1 | 原生 x86-64（AOT，非模拟） | 有 | AGENTS.md、docs/architecture.md | CPU 管线存在；Deck 进程、依赖与热点仍需实证 |
+| A2 | Vulkan 渲染（NVN→Vulkan） | 有 | runtime/vk_*.c | 后端存在；Deck/RADV 画面与同步仍需实测 |
+| A3 | Linux/SDL3 运行（非仅 Windows） | 部分 | runtime/platform/linux.c；公开 CI 构建 runtime 静态库 | 旧文档的 TOTK 1.2.1/1.4.3 帧率不能作本作证据；完整 Astral Chain 1.0.1/Deck 待验 |
+| A4 | Steam Deck 设备档案自动识别 | 有 | cfg.c:293 on_steam_deck()（DMI Valve/Jupiter/Galileo 或 SteamDeck=1） | 档案存在；需读回 handheld/1280x800/30fps/ASTC→BC1/512MiB 等实际默认值及优先级 |
 | A5 | 4GB VRAM 优化 | 缺 | README "Planned: Optimizations for 4gb VRAM GPU and Steam Deck" | DECK 档已压（ASTC→BC1、tex 512MiB、shadow 512），但未实测→需压测确认 |
 
 ## B. 输入 / 图示 / 菜单
@@ -29,26 +34,26 @@
 |---|------|---------|------|------|
 | C1 | FSR（上采样） | 部分 | ini upscaler=fsr（AMD FSR 1）+ ssaa（3D render scale） | 有 FSR1；需确认 Deck 上 FSR1 生效+标注（两塞尔达：TOTK FSR1+诚实标注3/4不可用） |
 | C2 | 抗锯齿 | 部分 | ssaa 3D render scale（1080 底渲染放大） | 需 Deck 实机核对 |
-| C3 | 分辨率 | 有 | output_res/render_scale/window_size 可配；DECK 档 1280x800 | 达标 |
-| C4 | 帧率（解 30 锁/60fps） | 有 | fps=60 默认（社区 60fps patch）+30 切换 + highfps_fix + realtime + cutscene fix | 达标；**但 60fps 下突进攻击输入计时 bug 已知**（README Status），第4幕教程需临时 30fps |
-| C5 | ASTC 纹理（Deck 无原生 ASTC） | 有 | cfg.c:187 Deck 走 compute decoder（vk_astc.c）；DECK 档 ASTC→BC1/BC3 | 达标；性能代价需在 Deck 实测 |
+| C3 | 分辨率 | 有 | output_res/render_scale/window_size 可配；DECK 档 1280x800 | 需分别核对内部尺寸、窗口输出与真正 16:10 布局 |
+| C4 | 帧率（解 30 锁/60fps） | 有 | fps=60 通用默认与 30 切换；highfps_fix/realtime/cutscene fix | 固定上游快照声明 60fps 突进输入计时问题、第4幕暂用30fps；本机尚未复现，需核对 Deck 档默认及完整时间语义 |
+| C5 | ASTC 解码与转码 | 有 | cfg.c:187 Deck 走 compute decoder（vk_astc.c）；DECK 档 ASTC→BC1/BC3 | 实现存在；sRGB/透明/法线、3D ASTC 和实际性能仍待验 |
 | C6 | Deck 实测帧率/功耗 | 缺 | 上游未测 Deck | 需 NVN p50/present 中位实测（两塞尔达有 present/帧时间口径） |
 
 ## D. 扩展功能
 | # | 能力 | 上游状态 | 证据 | 差距 |
 |---|------|---------|------|------|
-| D1 | 金手指 | 部分 | [cheats] per-mod 模拟器格式（mods/<mod>/cheats/<build>.txt），Cheats 标签写 ini | 格式与两塞尔达"版本绑定 Atmosphere 数据金手指"不同→需统一为可核实生效的预设体系 |
-| D2 | Amiibo（虚拟可刷） | 有 | amiibo.c/h 纯软件 540B NTAG215 转储 + amiibo_set_device_present + load_file/scan_and_tap；ov_system.c nn::nfp IPC | 有虚拟注入能力（与 TOTK 同路）→需 Deck 实机确认奖励生效 |
-| D3 | 原生陀螺仪 IMU | 有 | input.c "gyro are used when SDL exposes them"（SDL3 sensor 直读） | 与两塞尔达 SDL_SENSOR 直读同路→需 Deck 实机确认方向/瞄准 |
+| D1 | 金手指 | 部分 | [cheats] per-mod 布局（mods/<mod>/cheats/<build>.txt），Cheats 标签写 ini | 需核对实际操作码、精确版本绑定和写回校验；不能仅凭格式名判断与两作兼容性 |
+| D2 | Amiibo（虚拟服务） | 部分 | 继承的 amiibo.c/h 540B 转储读取与 ov_system.c nn::nfp IPC | 服务代码存在不等于本作会调用或有奖励玩法；须先确认原作适用性，再验证实际行为，不能计作已支持刷奖励 |
+| D3 | 原生陀螺仪 IMU | 部分 | input.c 的 SDL3 gamepad sensor 路径 | 两塞尔达已增加 Deck hidraw 原生读取；本作仍需适配原生后端和生命周期，实体方向/瞄准不得用遥操代验 |
 | D4 | 中文化 | 部分 | 设置与菜单支持简体中文（Setup + in-game menu）；controller-ui 有 cn.dtt | 游戏内文本语言可选；需确认中文覆盖完整度 |
 
 ## E. 恢复 / 构建 / 发布
 | # | 能力 | 上游状态 | 证据 | 差距 |
 |---|------|---------|------|------|
-| E1 | 输入即构建（自己 dump 的游戏+key） | 有 | config.local.toml（base.nsp/update.nsp/prod.keys），build 在本机 | 达标；需 NAS 私有输入 + 加密恢复（两塞尔达已有私有恢复 schema） |
+| E1 | 输入即构建（自己 dump 的游戏+key） | 有 | config.local.toml 指向 base/update 与密钥；代码、输入、生成物分离 | 需在获准私有构建节点验证完整流程及加密恢复，不在日用 Mac 或 Deck 构建 |
 | E2 | 游戏内容不进公仓 | 有 | check_content.py GENERATED_MARKER 校验 + .gitignore 大文件规则 | 达标；CI 跑同一校验 |
-| E3 | 可复现构建/CI | 部分 | 上游 CI 在 GitHub（.github/）；Linux 构建需 clang/lld/sdl3/vulkan | 需套我们的 GitLab CI（unit→build→SAST/Secret/Container/Dependency，远端 native-games tag） |
-| E4 | Deck 运行包（无 Docker 依赖） | 缺 | 上游 Windows 是 AppImage/Setup.exe；Linux 链接系统库 $ORIGIN rpath | 需出 Deck 免 Docker 运行包（两塞尔达已有 run.sh --verify 体系） |
+| E3 | 可复现构建/CI | 部分 | 本仓已配置 unit/runtime-build、SAST/Secret/Container/Dependency 与 SBOM 覆盖门禁 | 需精确 HEAD、实际远端 Runner 与合并后 main 全部终态通过；配置存在不是验收通过 |
+| E4 | Deck 运行包（无 Docker 依赖） | 缺 | Windows 为 .exe/Setup；Linux 构建链接系统库并使用 $ORIGIN rpath | 便携打包已修复 v101/astralchain 与原子发布；本项目完整自包含 Deck 包仍未验 |
 | E5 | 存档保护/原子快照 | 部分 | 有存档数据（README "its save data"）；未见原子快照 | 需移植两塞尔达的存档去重+原子快照+回滚 |
 
 ## 关键结论
@@ -71,4 +76,7 @@
 | F4 | mods 系统（RomFS+ExeFS 代码补丁+HD 贴图包） | 部分 | 上游有 per-mod 模拟器格式 mods（`mods/<mod>/`），但 ExeFS `.ips`/`.pchtxt` 自动重编译、HD 贴图堆自动扩容未见；需对照 CA4 统一 |
 | F5 | 144fps 实验档 + F10 性能浮层 | 部分 | 上游有 F10 性能覆盖层（README "performance overlay (F10)"）+60/30 切换，144 实验档未见；需对照 CA5 对齐 |
 
-DLSS（仅 RTX）、HDR10（Deck 不支持）同两塞尔达口径：PC 端有价值 / Deck 暂缓，不做。
+DLSS 需匹配 NVIDIA 硬件与后端，不能把开关存在当作 Deck 上已生效。
+HDR 按内置 LCD/OLED、外接显示、Vulkan 交换链与 Gamescope 色彩链分别验收；
+[OLED 官方规格明确列出 HDR 显示](https://www.steamdeck.com/en/tech/oled)，不能笼统写成“Deck 不支持”。
+本作 HDR 路径未验，通过前保留正确 SDR 回退。

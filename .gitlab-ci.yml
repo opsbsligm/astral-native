@@ -1,8 +1,17 @@
-# astral-native CI（对齐 totk/botw 门禁：内容守卫 + 纯 Python 单元 + 密钥扫描 + runtime 构建 + SAST 链）。
-# container_scanning 与 dependency-scanning 需要本项目登记 toolchain 通用包与 pip 依赖锁，见 docs/ci-roadmap.md，下一 MR 接入。
+# Public-source checks, real runtime compilation, SAST, dependencies and the exact SDK image.
 include:
   - template: Jobs/SAST.gitlab-ci.yml
   - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.v2.gitlab-ci.yml
+    inputs:
+      allow_failure: false
+      # The committed lock already resolves all three manifests. Keep the real
+      # scanner and SBOM coverage gate; do not run a second mutable resolution.
+      disabled_resolution_jobs: "python"
+      resolution_jobs_allow_failure: false
+      max_scan_depth: -1
+      pipcompile_lockfile_file_name_pattern: "pipcompile.lock.txt"
 
 workflow:
   rules:
@@ -35,8 +44,11 @@ native-unit:
     - export PYTHONPATH="/usr/share/python-wheels/pip-24.0-py3-none-any.whl:$CI_PROJECT_DIR/out/extra-pkgs"
   script:
     - python3 tools/check_content.py
+    - python3 .gitlab/check_dependency_coverage.py --input-only
+    - python3 tests/dependency_coverage_test.py -v
     - python3 tests/spin_waits_test.py -v
     - python3 tests/pack_shader_cache_test.py -v
+    - python3 tests/package_build_test.py -v
     - python3 tests/installer_test.py -v
 
 native-build:
@@ -62,6 +74,62 @@ native-build:
     when: always
     expire_in: 7 days
     paths: [out/cppscan.tar.gz]
+
+container_scanning:
+  tags: [native-games-origin]
+  timeout: 100 minutes
+  image: ${NATIVE_SECURITY_PREFIX}/container-scanning@sha256:f30b58af2ad924c82cd709b18d6594e007b492cf9e3fe6b223ff9b4d23f539e3
+  allow_failure: false
+  needs:
+    - job: native-build
+      artifacts: false
+  variables:
+    GIT_STRATEGY: fetch
+    CS_IMAGE: "archive://out/toolchain.tar"
+    CS_DISABLE_LANGUAGE_VULNERABILITY_SCAN: "false"
+    CS_QUIET: "true"
+    CS_TRIVY_CACHE_DIR: "$CI_PROJECT_DIR/out/trivy-cache"
+    TMPDIR: "$CI_PROJECT_DIR/out/trivy-tmp"
+  before_script:
+    - ruby .gitlab/fetch_toolchain.rb
+    - ruby .gitlab/prepare_scanner_cache.rb
+  script:
+    - ruby .gitlab/run_container_scan.rb
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths: [out/container-scan.log, gl-container-scanning-report.json, gl-sbom-report.cdx.json]
+
+dependency-scanning:
+  needs:
+    - job: native-build
+      artifacts: false
+  tags: [native-games-origin]
+  variables:
+    DS_ENABLE_MANIFEST_FALLBACK: "false"
+  before_script:
+    # Keep the unified resolution beside the manifests. The scanner's project
+    # discovery otherwise treats tools/requirements.txt as an unlocked project.
+    - cp .gitlab/pipcompile.lock.txt tools/pipcompile.lock.txt
+    - |
+      if [ -n "${NATIVE_SECURITY_API_URL:-}" ]; then
+        test -s "$CI_SERVER_TLS_CA_FILE"
+        export SSL_CERT_FILE="$CI_SERVER_TLS_CA_FILE"
+        export CI_API_V4_URL="$NATIVE_SECURITY_API_URL"
+      fi
+  image: ${NATIVE_SECURITY_PREFIX}/dependency-scanning@sha256:dee4eff3ebca66a1112477142c902e62462ee53e0a8dc4292cdfa2ed459aae21
+
+dependency-coverage:
+  needs:
+    - job: dependency-scanning
+      artifacts: true
+  image: native-games/toolchain:02b1aa2ee13b00c30b38
+  script:
+    - python3 .gitlab/check_dependency_coverage.py
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths: [out/dependency-coverage.json]
 
 semgrep-sast:
   needs:

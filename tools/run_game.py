@@ -4,8 +4,8 @@ The user's profile (build/profile) is never written: each run copies it to <exe 
 backup, and deletes the copy afterwards. The log records how many other astralchain.exe and ninja.exe processes ran, because
 timings taken next to them are not comparable.
 
-    python tools/run_game.py build/v143 --save <backup> --seconds 15 --tag idle --env AC_TRACE=perf
-    python tools/run_game.py build/v143 --save <backup> --script <input.txt> --seconds 18 --tag fight --quiet \
+    python tools/run_game.py build/v101 --save <backup> --seconds 15 --tag idle --env AC_TRACE=perf
+    python tools/run_game.py build/v101 --save <backup> --script <input.txt> --seconds 18 --tag fight --quiet \
         --env AC_TRACE=perf,sched
 
 <backup> is a folder of build/save-backup; --script defaults to tools/input/load_save.txt (title screen to the first

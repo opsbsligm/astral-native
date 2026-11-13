@@ -1949,6 +1949,11 @@ static long long prepare_files(const char *ans_path, const char *prg_path, int t
         free(ab), free(pb);
         return -1;
     }
+    if (an % ANS_REC || prg_walk(pb, pn, NULL, NULL) != pn) {
+        rt_log("gfx_shader: prepare: incomplete %s records; prepared cache retained", what);
+        free(ab), free(pb);
+        return -1;
+    }
     Prep p = {.progs = {calloc(pn / PRG_HEAD + 1, sizeof(PrgIdx)), 0}, .ans = ab, .n_ans = an / ANS_REC};
     if (iid_out) p.iid = calloc(p.n_ans + 1, 32);
     if (!p.progs.idx || (iid_out && !p.iid)) return free(p.progs.idx), free(p.iid), free(ab), free(pb), -1;
@@ -2000,9 +2005,21 @@ int gfx_shader_prepare_seed(const char *dir, int threads, int procs) {
     uint64_t fail0 = (uint64_t)n_failures;
     uint8_t *ab = NULL, (*iid)[32] = NULL;
     long long n = prepare_files(ans, prg, threads, procs, "seed variants", &ab, &iid);
-    if (n < 0) return 1;
-    uint8_t *recs = calloc((size_t)n + 1, PRP_REC);
+    if (n <= 0) {
+        rt_log("gfx_shader: prepare: no complete seed records; prepared cache retained");
+        free(iid), free(ab);
+        return 1;
+    }
     static const uint8_t zero[32];
+    size_t unresolved = 0;
+    for (long long i = 0; i < n; i++)
+        if (!memcmp(iid[i], zero, sizeof zero)) unresolved++;
+    if (unresolved) {
+        rt_log("gfx_shader: prepare: %zu of %lld seed records unresolved; prepared cache retained", unresolved, n);
+        free(iid), free(ab);
+        return 1;
+    }
+    uint8_t *recs = calloc((size_t)n + 1, PRP_REC);
     size_t u = 0, by[3] = {0}, stages[6] = {0};
     Set64 seen = {0};
     for (long long i = 0; recs && i < n; i++) {           // seed records come in priority order: the first id wins
@@ -2016,7 +2033,7 @@ int gfx_shader_prepare_seed(const char *dir, int threads, int procs) {
     free(seen.v);
     RecHeader h = {{'A', 'C', 'S', 'P', 'R', 'P'}, PRP_VERSION, PRP_REC};
     uint8_t *file = recs ? malloc(sizeof h + u * PRP_REC + 1) : NULL;
-    int ok = file != NULL;
+    int ok = file != NULL && u > 0;
     if (ok) {
         memcpy(file, &h, sizeof h), memcpy(file + sizeof h, recs, u * PRP_REC);
         ok = plat_file_write_atomic(out, file, sizeof h + u * PRP_REC);
