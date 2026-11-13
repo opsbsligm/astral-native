@@ -228,3 +228,19 @@ to `build\<ver>\shaders\` and runs it through the translator and `spirv-val`; fa
 
 - Ghidra 12.1.2 with Adubbz's Ghidra-Switch-Loader in `toolchain\ghidra\` (JDK 21) opens the game modules (NSO).
 - `tools\fetch_refs.sh` clones the upstream projects this port builds on into `refs\`, read-only.
+
+
+## Shader preparation integrity
+
+The native `--prepare-shaders` command requires nonempty, complete seed records and a resolved translation for every
+requested seed. Invalid, truncated or unresolved input returns nonzero without replacing an existing prepared index.
+`--warm-shaders` validates the prepared index format and propagates missing translations or GPU build failures.
+The reported built count includes successful builds and already available libraries; visited records are not builds.
+Explicit driver skip entries and unavailable graphics pipeline libraries retain their reported fallbacks. A run that
+builds no variants fails even when every record was skipped.
+
+Runtime acceptance uses an isolated writable cache with the package and player data read-only. Establish a successful
+native preparation first, then verify that header-only program seeds and truncated answer records fail while preserving
+the prepared index byte for byte. Temporarily hide only that isolated translation cache and verify that `--warm-shaders`
+fails with zero builds. Restore the inputs and check that all requested variants prepare again. Keep the native counters,
+exit codes and content digests with the exact source and toolchain identities. These checks do not validate gameplay FPS.
