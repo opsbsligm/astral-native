@@ -5,6 +5,8 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
+MANIFESTS = ('tools/requirements.txt', 'tools/requirements-installer.txt',
+             'tools/requirements-py314.txt')
 
 
 def name(value):
@@ -34,29 +36,50 @@ def requirements(path):
     return result
 
 
+def declared_dependencies():
+    """Reject omitted manifests, conflicting pins and untracked requirement syntax."""
+    result = {}
+    for relative in MANIFESTS:
+        for line in (ROOT / relative).read_text().splitlines():
+            text = line.strip()
+            if not text or text.startswith('#'):
+                continue
+            package = re.fullmatch(r'([A-Za-z0-9_.-]+)==([^\s;]+)', text)
+            if not package:
+                raise ValueError('Unsupported requirement in ' + relative)
+            key, version = name(package[1]), package[2]
+            if key in result and result[key] != version:
+                raise ValueError('Conflicting declared dependency: ' + key)
+            result[key] = version
+    return result
+
+
 def validate_input():
-    original = requirements(ROOT / 'requirements-build.lock')
     generated = requirements(ROOT / '.gitlab/pipcompile.lock.txt')
-    if original.keys() != generated.keys():
-        raise ValueError('Generated scan lock changes the dependency inventory')
-    for package, value in original.items():
-        derived = generated[package]
-        if value['version'] != derived['version'] or not value['hashes'] <= derived['hashes']:
-            raise ValueError('Generated scan lock differs from locked package: ' + package)
-    return {package: value['version'] for package, value in original.items()}
+    for package, version in declared_dependencies().items():
+        if package not in generated or generated[package]['version'] != version:
+            raise ValueError('Scan lock omits or changes declared package: ' + package)
+    return {package: value['version'] for package, value in generated.items()}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input-only', action='store_true')
+    parser.add_argument('--write-input', type=Path)
     parser.add_argument('--sbom-dir', type=Path, default=ROOT / 'sca-artifacts')
     args = parser.parse_args()
+    if args.write_input:
+        packages = declared_dependencies()
+        args.write_input.parent.mkdir(parents=True, exist_ok=True)
+        args.write_input.write_text(''.join(f'{p}=={v}\n' for p, v in sorted(packages.items())))
+        print(f'{len(packages)} declared packages from {len(MANIFESTS)} manifests')
+        return
     expected = {'pipcompile.lock.txt': validate_input()}
     art = ROOT / '.gitlab/art/pipcompile.lock.txt'
     if art.exists():
         expected['art/pipcompile.lock.txt'] = {p: v['version'] for p, v in requirements(art).items()}
     if args.input_only:
-        print('Scan lock preserves all locked package versions and original artifact hashes')
+        print('Hashed scan lock covers every declared version and its resolved dependencies')
         return
     for path in ROOT.rglob('packages.lock.json'):
         data = json.loads(path.read_text())

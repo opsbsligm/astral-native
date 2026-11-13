@@ -1,0 +1,1466 @@
+{
+  "schema_version": 1,
+  "standard": "trilogy-v5-20261106",
+  "project": "astral-native",
+  "game_version": "1.0.1",
+  "hardware_validated": false,
+  "full_playthrough_validated": false,
+  "meaning": "验收定义快照，不是执行结果；未挂接本项目精确构建与证据的项目保持not_run。P0为门槛优先级，不等于已发现游戏缺陷。",
+  "source_snapshots": [
+    {
+      "file": "baseline-contract-v3.json",
+      "sha256": "db12b35b30d34b0187daa8d21463dc57cef532c30cc77a0b9ab0fd2494983892"
+    },
+    {
+      "file": "acceptance-plan-v2.json",
+      "sha256": "408e3c6d5eccb1721a3d84f5a7199df5564627aa53bea22c05dcafcd877b47d6"
+    },
+    {
+      "file": "blindspot-register-v5.json",
+      "sha256": "1f675e914e0076bf8e00a3867b30003fd8c66c9ac09ca2b5423c3ed3cc01348a"
+    }
+  ],
+  "counts": {
+    "baseline": 18,
+    "plan": 63,
+    "blindspot": 16,
+    "total": 97,
+    "applicable": 84,
+    "other_game_reference": 13
+  },
+  "cases": [
+    {
+      "id": "B01",
+      "group": "baseline",
+      "name": "执行路径诚实",
+      "requirement": "实际游戏进程为Linux x86-64；CPU AOT/直接执行、系统服务与GPU适配边界逐层记录；不以AppImage、native命名或启动器进程代替证明。若承诺无逐帧客体图形翻译，则该项必须单独通过。",
+      "evidence_required": [
+        "实际进程/依赖/热点与适配路径证据"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B02",
+      "group": "baseline",
+      "name": "动作与文字一致",
+      "requirement": "动作、绑定、判定阶段、教程文字、字形、操作图和QTE使用同一动作语义与绑定代次；普通数字键不能被要求输出压力/半幅。",
+      "evidence_required": [
+        "重绑/切设备/混合输入的真实回归"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B03",
+      "group": "baseline",
+      "name": "默认全手柄",
+      "requirement": "承诺的全部游戏功能、设置、首次流程、输入文字和错误恢复均能用手柄完成；核心流程不依赖物理键鼠，背键/IMU不得成为唯一可达操作。",
+      "evidence_required": [
+        "干净用户首次使用与全流程实体操作"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B04",
+      "group": "baseline",
+      "name": "数据完整优先",
+      "requirement": "不覆盖玩家新存档；事务写入与最近有效提交恢复；升级前验证迁移与旧版本兼容；不假称断电绝无进度损失。",
+      "evidence_required": [
+        "保存/中断/恢复/迁移/回滚真实测试"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B05",
+      "group": "baseline",
+      "name": "系统完整性",
+      "requirement": "生产不要求root、解除rootfs只读、内核/BIOS更改、全局sysctl/udev放宽或全局关闭Steam Input；必要驱动缺陷另立研发任务，不能成为默认玩家前置。",
+      "evidence_required": [
+        "原厂受支持SteamOS安装与运行记录"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B06",
+      "group": "baseline",
+      "name": "SDK/API契约",
+      "requirement": "仅用项目具备授权与初始化条件的SDK/API；返回值/能力/生命周期/线程语义必须处理；无有效Steamworks上下文时使用明确降级，不伪借其他游戏AppID，不把开发steam_appid.txt带入正式Steam包。",
+      "evidence_required": [
+        "初始化成功/失败、无服务与受支持环境测试"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B07",
+      "group": "baseline",
+      "name": "客观质量承诺",
+      "requirement": "真实内部尺寸、UI/输出/显示、画质LOD、上采样与帧生成分别披露；插帧不算原生渲染fps；不得悄悄减画质/分辨率/内容以维持已承诺标签。",
+      "evidence_required": [
+        "固定场景同条件采样与版本差异"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B08",
+      "group": "baseline",
+      "name": "原作机制与艺术保真",
+      "requirement": "动作时间、物理、碰撞、判定与原作参考一致；美术增强可回退，不能用全局提亮/饱和/关雾掩盖渲染错误，不能把AI补细节称为恢复原母版。",
+      "evidence_required": [
+        "参考路线对照、材质与动态图审查"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B09",
+      "group": "baseline",
+      "name": "内容覆盖完整",
+      "requirement": "发行范围内的主线、教程、图集、世界提示、影片内提示和各支持语言全部登记并验证；未知/未分类项不视为通过，DLC/联机/NG+分别声明。",
+      "evidence_required": [
+        "内容账本与完整主线证据"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B10",
+      "group": "baseline",
+      "name": "生命周期正确",
+      "requirement": "焦点、Overlay、软键盘、休眠恢复、换音频/显示/手柄与正常退出不得造成主线阻断、保存破坏或持续输入/音频退化；恢复不做异常大dt补算。",
+      "evidence_required": [
+        "条件矩阵与多次循环真实证据"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B11",
+      "group": "baseline",
+      "name": "高级能力要真可用",
+      "requirement": "API返回true、能力枚举和非零常量均不足；IMU/背键/触控板须真实样本与动作验证；设备设置由唯一会话管理并安全恢复，不残留后台接管。",
+      "evidence_required": [
+        "有效运动/时间戳/热插拔/异常退出验证"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B12",
+      "group": "baseline",
+      "name": "离线单人可用",
+      "requirement": "安装完成后的承诺单人内容可离线冷启动；网络、遥测、更新与非官方联机服务不能成为本地游戏阻断；联网失败有可恢复路径。",
+      "evidence_required": [
+        "断网首次会话、服务失败与恢复"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B13",
+      "group": "baseline",
+      "name": "供应链与私有数据",
+      "requirement": "游戏资产/存档/密钥/用户信息与公开代码分离；依赖固定来源和摘要/许可；更新来源可信并验证完整性，敏感诊断默认不外传。",
+      "evidence_required": [
+        "产物清单、依赖锁、扫描、验证与恢复证据"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B14",
+      "group": "baseline",
+      "name": "最终包才是发布对象",
+      "requirement": "最终相同SHA包在真实支持矩阵复验；源码/CI/合成夹具成功不能替代游戏测试；所有未验证标记保留false。",
+      "evidence_required": [
+        "精确SHA、必需CI、安全与最终包回归"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B15",
+      "group": "baseline",
+      "name": "不能用辅助掩盖缺陷",
+      "requirement": "关闭自动QTE/辅助模式仍需通过普通机制；辅助功能独立验收；不靠关闭关键特效、输入功能或跳过内容宣称厂商品质完成。",
+      "evidence_required": [
+        "普通/辅助模式分别测试"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B16",
+      "group": "baseline",
+      "name": "严重缺陷不可豁免",
+      "requirement": "存档破坏、进度阻断、错误操作说明、关键输入失效、系统破坏、敏感泄漏以及违反原生承诺均阻断发布；排期、已花成本和演示效果不能覆盖。",
+      "evidence_required": [
+        "缺陷关闭证据与复审"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B17",
+      "group": "baseline",
+      "name": "变更必须留痕",
+      "requirement": "支持范围、默认画质、性能档、运行时边界、资源许可和存档schema的变化先做影响评审、更新承诺与回归清单，禁止发布后才补解释。",
+      "evidence_required": [
+        "变更记录、受影响证据与重新冻结"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "B18",
+      "group": "baseline",
+      "name": "研究与产品分别完成",
+      "requirement": "计划文件、来源数量、知识回流和报告完成只证明研究交付；hardware/full_playthrough/asset_quality等只由对应证据置true，不承诺零崩溃。",
+      "evidence_required": [
+        "逐项验收台账及真实残余范围"
+      ],
+      "severity_if_breached": "release_blocker",
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "TXT-01",
+      "group": "plan",
+      "name": "清点全部提示载体",
+      "source_game": "all",
+      "requirement": "逐一列出字符串表、脚本拼接、图集、世界贴图、字幕/视频和错误窗口；每条有稳定ID/来源/语言/场景/处理方式。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "TXT-02",
+      "group": "plan",
+      "name": "慢走语义",
+      "source_game": "all",
+      "requirement": "手柄慢推轴与普通数字键慢行修饰组合均真实可实现；不得要求普通W键输出压力或半幅。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "TXT-03",
+      "group": "plan",
+      "name": "绑定即时更新",
+      "source_game": "all",
+      "requirement": "游戏内和Steam侧重绑后，动作/教程/图标/操作图同代更新；无法获得来源时明确降级，不能显示旧绑定。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "TXT-04",
+      "group": "plan",
+      "name": "按下与释放",
+      "source_game": "all",
+      "requirement": "区分点击/按下/释放/长按/连打/旋转，文字与实际触发阶段一致。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "TXT-05",
+      "group": "plan",
+      "name": "混合输入提示",
+      "source_game": "all",
+      "requirement": "摇杆移动时加入陀螺仪/触控板相机输入；相机可叠加，控制器提示保持稳定。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "TXT-06",
+      "group": "plan",
+      "name": "未知设备降级",
+      "source_game": "all",
+      "requirement": "接入未知手柄时有清晰通用提示及映射入口，不能显示空图或错误PS/Xbox布局。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "TXT-07",
+      "group": "plan",
+      "name": "中文与长文本",
+      "source_game": "all",
+      "requirement": "全部拟支持语言资源逐页检查；中文不缺字，长字符串不截断，组合键顺序和换行正确。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "TXT-08",
+      "group": "plan",
+      "name": "烘焙提示",
+      "source_game": "all",
+      "requirement": "教程图片、世界物件和预渲染视频内的旧提示有逐项处理证据；未处理内容阻断全覆盖声明。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "TXT-09",
+      "group": "plan",
+      "name": "错误与首次设置",
+      "source_game": "all",
+      "requirement": "资源/版本/内存/设备/保存失败都给当前设备可操作的中文说明，不显示开发者路径/寄存器/堆栈替代产品提示。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "INP-01",
+      "group": "plan",
+      "name": "单一输入所有者",
+      "source_game": "all",
+      "requirement": "分别验证Steam Input、SDL虚拟手柄和受控HID路径；同一物理事件只触发一次动作。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "INP-02",
+      "group": "plan",
+      "name": "设备来源识别",
+      "source_game": "all",
+      "requirement": "记录real type/virtual type/Steam handle与能力，不按VID/PID或字符串名称单独推定完整功能。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "INP-03",
+      "group": "plan",
+      "name": "六轴有效性",
+      "source_game": "all",
+      "requirement": "有非零且随运动变化的有效样本、单调时间戳和正确单位坐标；不能只检查API返回true。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "INP-04",
+      "group": "plan",
+      "name": "六轴生命周期",
+      "source_game": "all",
+      "requirement": "启停、失焦、断开、休眠、进程退出后重建；如改设备模式必须保存/恢复，不能后台遗留。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "INP-05",
+      "group": "plan",
+      "name": "摇杆手感",
+      "source_game": "all",
+      "requirement": "内外死区、径向曲线、对角线、慢走区间、加速度与反转分别比较原参考；避免Steam和游戏双重死区。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "INP-06",
+      "group": "plan",
+      "name": "扳机语义",
+      "source_game": "all",
+      "requirement": "原作数字扳机保持可达阈值，模拟量动作保留范围；阈值附近无抖动或误连发。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "INP-07",
+      "group": "plan",
+      "name": "背键与触控板",
+      "source_game": "all",
+      "requirement": "配置背键/触控板后动作和提示一致；核心玩法有普通手柄可达路径。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "INP-08",
+      "group": "plan",
+      "name": "热插拔与换人",
+      "source_game": "all",
+      "requirement": "蓝牙/USB外接、断开重连和控制器次序变化不抢玩家位置、不遗留按住状态。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "INP-09",
+      "group": "plan",
+      "name": "Overlay焦点",
+      "source_game": "all",
+      "requirement": "Steam/快捷菜单/软键盘开关后，游戏没有幽灵输入、误确认、被吞释放或光标残留。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "INP-10",
+      "group": "plan",
+      "name": "震动",
+      "source_game": "all",
+      "requirement": "左右通道、强度和时长与事件一致；暂停/退出及时停止，允许关闭并不假称DualSense/Joy-Con特性。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "UI-01",
+      "group": "plan",
+      "name": "全程手柄导航",
+      "source_game": "all",
+      "requirement": "首次进入、资源选择、设置、滑条、确认取消、退出和错误恢复均无需物理键鼠。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "UI-02",
+      "group": "plan",
+      "name": "Deck完整操作图",
+      "source_game": "all",
+      "requirement": "正面/肩键/背键/触控板标注实际动作，按当前映射生成，系统Steam/快捷键不被占用。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "UI-03",
+      "group": "plan",
+      "name": "800p可读性",
+      "source_game": "all",
+      "requirement": "中文/数值/字幕/地图标签在正常距离可读；正文建议16–20px可调，12px仅建议小字下界，不以9px通过质量门槛。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "UI-04",
+      "group": "plan",
+      "name": "真16:10布局",
+      "source_game": "all",
+      "requirement": "确认投影、FOV、HUD锚点/安全区/点击区域；原视频等比，不能把720p拉伸成800p。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "UI-05",
+      "group": "plan",
+      "name": "显示热切换",
+      "source_game": "all",
+      "requirement": "掌机/停靠/电视切换后布局、焦点、分辨率/刷新率/HDR能力正确，断开能回内屏。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "UI-06",
+      "group": "plan",
+      "name": "信息冗余",
+      "source_game": "all",
+      "requirement": "关键提示不只靠颜色/声音/震动；字幕支持大小、底板与说话人等有源内容范围。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "GFX-01",
+      "group": "plan",
+      "name": "内部尺寸证据",
+      "source_game": "all",
+      "requirement": "同时记录内部3D、上采样输出、UI、窗口和显示尺寸；不能以800p窗口宣称800p渲染。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "GFX-02",
+      "group": "plan",
+      "name": "颜色链",
+      "source_game": "all",
+      "requirement": "sRGB/线性/量程/透明/色调映射逐环对照，LCD和OLED默认各自校准，无全局强饱和冒充保真。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "GFX-03",
+      "group": "plan",
+      "name": "ASTC与材质",
+      "source_game": "all",
+      "requirement": "对原ASTC、当前BC3和候选BC7/BC5/保留数据格式做动态图和显存A/B；法线、遮罩和透明边缘无新增错误。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "GFX-04",
+      "group": "plan",
+      "name": "精选高清资产",
+      "source_game": "all",
+      "requirement": "逐资源保存原hash/版本/处理/格式/mip/语义/回滚；仅已验收资产进入增强包。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "GFX-05",
+      "group": "plan",
+      "name": "管线准备",
+      "source_game": "all",
+      "requirement": "第一次遇到代表材质/特效无不可接受卡顿；预热覆盖与残余缺口可解释，缓存按GPU/驱动/构建失效。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "GFX-06",
+      "group": "plan",
+      "name": "HDR与降级",
+      "source_game": "all",
+      "requirement": "只有真实HDR链路通过才标HDR；SDR扩色/逆色调映射独立命名；LCD和不支持的外屏有正确SDR回退。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "GFX-07",
+      "group": "plan",
+      "name": "内存预算",
+      "source_game": "all",
+      "requirement": "运行时监测heapBudget/heapUsage与RSS/GTT，不把共享内存重复相加；超过预算前可回收/降mip并说明。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "GFX-08",
+      "group": "plan",
+      "name": "AA/上采样",
+      "source_game": "all",
+      "requirement": "时域方案有深度/运动向量/jitter/HUD隔离与镜头切换重置；帧生成默认关闭并单独记显示fps。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "SYS-01",
+      "group": "plan",
+      "name": "休眠恢复",
+      "source_game": "all",
+      "requirement": "至少10次不同场景休眠，恢复后无大dt补算/QTE秒过、音频/IMU失效；无假设必有休眠前回调。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "SYS-02",
+      "group": "plan",
+      "name": "安全存档",
+      "source_game": "all",
+      "requirement": "游戏允许点保存、事务写入、退出/断电模拟与恢复；不强制在不支持场景保存或覆盖新进度。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "SYS-03",
+      "group": "plan",
+      "name": "离线冷启动",
+      "source_game": "all",
+      "requirement": "断网新会话可进已安装单人内容，无每次下载依赖；联网/非官方服务故障不破坏离线存档。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "SYS-04",
+      "group": "plan",
+      "name": "音频切换",
+      "source_game": "all",
+      "requirement": "扬声器/耳机/蓝牙/HDMI切换不丢声音；对白、字幕、影片多同步点正确。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "SYS-05",
+      "group": "plan",
+      "name": "运行时ABI",
+      "source_game": "all",
+      "requirement": "确认宿主/Steam Linux Runtime的原生ELF路径、驱动注入、权限与依赖；生产无需解锁rootfs或sudo。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "SYS-06",
+      "group": "plan",
+      "name": "发布回滚",
+      "source_game": "all",
+      "requirement": "每作独立目录/配置/输入/存档，版本升级原子切换；校验失败可恢复旧包且不覆盖玩家存档。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "SYS-07",
+      "group": "plan",
+      "name": "耐久",
+      "source_game": "all",
+      "requirement": "至少2小时实际交互筛查及6小时换区耐久，统计PSS/RSS/图像/线程/句柄与不可回收增长。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "PERF-01",
+      "group": "plan",
+      "name": "代表场景",
+      "source_game": "all",
+      "requirement": "每作至少6类固定存档/路线各20分钟，冷/热缓存分别采；锁定画质/功耗/分辨率条件。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "PERF-02",
+      "group": "plan",
+      "name": "限帧和刷新",
+      "source_game": "all",
+      "requirement": "30/40/45/60按支持档验证，不叠加独立时钟限帧造成拍频；60不默认配90Hz。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "PERF-03",
+      "group": "plan",
+      "name": "端到端延迟",
+      "source_game": "all",
+      "requirement": "真实实体按键到屏幕响应P50/P95与测量误差；合成输入和录屏延迟分别记录。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "PERF-04",
+      "group": "plan",
+      "name": "电池与散热",
+      "source_game": "all",
+      "requirement": "12W/15W候选、插电/电池与热稳态分别采整机功耗和帧时间；APU TDP不能当整机耗电。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "PERF-05",
+      "group": "plan",
+      "name": "时间一致性",
+      "source_game": "all",
+      "requirement": "各支持档真实动作/动画/物理/影片/音频与原参考一致，掉帧不出现慢动作/快进或输入窗改变。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "AC-01",
+      "group": "plan",
+      "name": "序章与总部",
+      "source_game": "AC",
+      "requirement": "完整序章→总部→任务启动，输入、名字输入、中文UI与存档成立。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "AC-02",
+      "group": "plan",
+      "name": "雷吉恩手动控制",
+      "source_game": "AC",
+      "requirement": "玩家与雷吉恩控制切换、锁链牵引/包围/绑缚动作、相机和组合提示一致。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "AC-03",
+      "group": "plan",
+      "name": "同步与精确闪避",
+      "source_game": "AC",
+      "requirement": "触发窗口/提示时机/受击停顿30和60档对比；不能只靠手感主观判断。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "AC-04",
+      "group": "plan",
+      "name": "IRIS/拍照/瞄准",
+      "source_game": "AC",
+      "requirement": "模式切换、图示、镜头与可选六轴在真实任务可用。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "AC-05",
+      "group": "plan",
+      "name": "高负载与影片",
+      "source_game": "AC",
+      "requirement": "城市人群、异界特效、任务切换和完整代表过场音画；原预渲染30帧不冒称60。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "GOW-01",
+      "group": "plan",
+      "name": "盖娅与波塞冬",
+      "source_game": "GOW",
+      "requirement": "序章抬物连打和波塞冬各QTE，无自动QTE时通过，含失败重试。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "GOW-02",
+      "group": "plan",
+      "name": "旋转与连打",
+      "source_game": "GOW",
+      "requirement": "所有发现的旋转方向/长按/连打类型真实操作并测时间，重绑定后提示跟随。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "GOW-03",
+      "group": "plan",
+      "name": "冥界与弩炮",
+      "source_game": "GOW",
+      "requirement": "攀边/阿波罗之弓相关路径/物件交互/传送门弩炮不软锁。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "GOW-04",
+      "group": "plan",
+      "name": "克洛诺斯",
+      "source_game": "GOW",
+      "requirement": "拉拽与相关关键动作，当前帧率档不越界/飞出场景。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "GOW-05",
+      "group": "plan",
+      "name": "缪斯竖琴",
+      "source_game": "GOW",
+      "requirement": "HUD、世界物件全部贴图层和音乐节奏按当前控制器/绑定一致。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "GOW-06",
+      "group": "plan",
+      "name": "完整操作图",
+      "source_game": "GOW",
+      "requirement": "证明已有Xbox/Switch替换基础正常，新增Deck图与背键/触控板标注实际验证。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "BB-01",
+      "group": "plan",
+      "name": "候选同场景对照",
+      "source_game": "BB",
+      "requirement": "bbport0.51/0.7、ayozetr与bbhost按同存档/同内部尺寸/同效果/无FG比较，保留各自独立用户数据。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "BB-02",
+      "group": "plan",
+      "name": "枪反/闪避/变形",
+      "source_game": "BB",
+      "requirement": "枪反、翻滚/冲刺、蓄力/变形/锁定和切目标真实手柄回归，保留原动作触发阶段。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "BB-03",
+      "group": "plan",
+      "name": "触控板替代",
+      "source_game": "BB",
+      "requirement": "姿势/快捷道具/菜单等原左右触控板功能能通过Deck和普通手柄路径到达。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "BB-04",
+      "group": "plan",
+      "name": "传送与死亡",
+      "source_game": "BB",
+      "requirement": "猎人梦境、反复传送、死亡重试与保存重进无持续资源增长或状态损坏。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "BB-05",
+      "group": "plan",
+      "name": "物理与状态",
+      "source_game": "BB",
+      "requirement": "布料、状态异常/中毒、碰撞和高粒子Boss在支持帧率档保持时间和效果正确。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "BB-06",
+      "group": "plan",
+      "name": "DLC与地牢",
+      "source_game": "BB",
+      "requirement": "若纳入发行范围，The Old Hunters/圣杯地牢/NG+逐项覆盖，不以本篇结果代替。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "BB-07",
+      "group": "plan",
+      "name": "最终战与结尾",
+      "source_game": "BB",
+      "requirement": "本篇最终流程、结尾和新周目存档转换符合声明范围；联机另验。",
+      "evidence_required": [
+        "固定构建与资源版本",
+        "真实执行记录或截图/视频/采样，按项目适用",
+        "实际结果及未覆盖范围"
+      ],
+      "applicability": "other_game_reference",
+      "status": "not_applicable",
+      "evidence": [],
+      "not_applicable_reason": "原标准中的战神或血源专属场景，仅保留参考，不计为异界锁链通过项。"
+    },
+    {
+      "id": "V5-01",
+      "group": "blindspot",
+      "name": "主线与国语分支必须共享同一个版本闭包",
+      "priority": "P0",
+      "requirement": "以只读原包指纹为根，锁定有效base/update/DLC视图、运行时提交、工具版本、资产配方、提示数据库、配音事件映射。启动核对实际加载项；不匹配停用整个依赖单元，说明回退。",
+      "acceptance": [
+        "故意换入一个其他版本银行/图集/补丁，应在进入对应内容前识别并解释",
+        "原声基础版、资产增强版、国语候选分别有独立清单；组合版本重新验收",
+        "未知字段保持unknown，不生成虚假hash或版本"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-02",
+      "group": "blindspot",
+      "name": "保存成功、文件替换成功和断电可恢复必须分开",
+      "priority": "P0",
+      "requirement": "追踪真正游戏存档和旁路元数据两条路径；写入/flush/fsync/rename/目录同步错误逐级处理，避免显示虚假的成功。保留上一代有效提交，多文件以可恢复代次提交。",
+      "acceptance": [
+        "在隔离存档副本注入ENOSPC/EIO/权限拒绝，界面不报告成功且旧进度仍可读取",
+        "进程终止测试与文件系统/断电持久性测试分别记录；不在本人唯一存档或唯一设备上拔电试验",
+        "明确存档内容、param/icon、配置各自事务边界"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-03",
+      "group": "blindspot",
+      "name": "切换血源后端不能共享唯一可写存档",
+      "priority": "P0",
+      "requirement": "候选运行时各用独立用户根，原始备份只读；明确导入、导出、单向升级和禁止降级矩阵。迁移成功标准是完整关键状态，不只是能载入。",
+      "acceptance": [
+        "在副本检查角色/装备/任务flag/NG+/DLC/地牢等实际范围，跨关键推进点保存重进",
+        "无经过验证的往返路径时不提供一键双向迁移",
+        "切后端和回滚程序均不能自动覆盖另一候选的数据"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-04",
+      "group": "blindspot",
+      "name": "AOT和激进优化可能改变游戏数值语义",
+      "priority": "P0",
+      "requirement": "先保留原执行语义和可对照构建，再逐项评估优化。禁止把全局fast-math或未验证指令替换当默认性能开关。目标是玩法等价，不要求不同平台画面逐像素一致。",
+      "acceptance": [
+        "选碰撞边缘、物理高压、Boss脚本、QTE失败与成功路径做原作/基准/优化候选对照",
+        "对最小数值热点记录输入与结果；随机系统使用状态约束和容差而非盲目整帧hash",
+        "发现偏差可定位到单项编译或补丁变更"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-05",
+      "group": "blindspot",
+      "name": "读盘变快和多线程完成顺序本身也要验证",
+      "priority": "P0",
+      "requirement": "异步IO区分提交/完成/取消/消费，建立所有权与线程契约；不以固定sleep仿制原机加载速度。必须检验极快与极慢的完成时序。",
+      "acceptance": [
+        "对隔离测试载荷注入延迟、取消、完成顺序扰动，记录逻辑任务ID",
+        "跳过过场、快速重试、传送和退出时不回调已销毁对象",
+        "同场景冷SSD、热缓存及支持的microSD均不出现新增软锁"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-06",
+      "group": "blindspot",
+      "name": "GPU执行顺序、内存可见性和越界语义不能混为一谈",
+      "priority": "P0",
+      "requirement": "明确guest/host资源生命周期、别名、布局、队列和内存可见性契约。按实际设备能力处理robustness，不为提速关闭必要保护；诊断构建查同步，个人游玩构建再测性能。",
+      "acceptance": [
+        "验证层/同步检查与代表抓帧定位根因，不能拿验证层关闭后的无报错当通过",
+        "大量场景切换/流式替换/异常退出无资源过早复用",
+        "设备丢失后停止提交并安全退出或经验证重建，不写入未经确认的游戏状态"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-07",
+      "group": "blindspot",
+      "name": "主机服务替代必须保留状态机和失败语义",
+      "priority": "P0",
+      "requirement": "对实际调用服务分类：真实实现、明确离线替代、不可用、未知。校验结果、回调与UI三者一致；本地奖杯与Steam成就分开命名，不接入官方账号凭据。",
+      "acceptance": [
+        "联网/断网/模块缺失/初始化失败/超时/取消均能落入可解释终态",
+        "默认项目范围仅已验的本人单人路径；新增联机另设范围和数据隔离",
+        "记录实际加载的联网模块与配置，不能仅因当前断网声称程序无网络路径"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-08",
+      "group": "blindspot",
+      "name": "中文输入要检查编码长度，日志也可能记录个人命名",
+      "priority": "P1",
+      "requirement": "明确原游戏可接受字符与长度，转换边界校验，缺字有说明；输入取消不留半写状态。个人演示用虚构命名，分享日志默认脱敏；不以更改日志掩盖错误。",
+      "acceptance": [
+        "中文、混合ASCII、达到长度上限、输入法组合、取消和重开逐条检验",
+        "无支持的emoji/组合字符应明确拒绝或安全替代，不能生成损坏编码",
+        "未经脱敏的命名日志、路径与存档不进入自媒体素材包"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-09",
+      "group": "blindspot",
+      "name": "Steam菜单与软键盘出现时，游戏是否暂停必须按作定义",
+      "priority": "P0",
+      "requirement": "分别定义失焦、Overlay、系统菜单、命名、影片、QTE、暂停及挂起。区分冻结游戏时间、只屏蔽输入和系统挂起；尊重已选原作/个人辅助模式并明确标注变化。",
+      "acceptance": [
+        "至少测试战斗/QTE/过场/命名界面各自进入系统菜单和恢复",
+        "取消系统菜单不能泄漏确认/攻击；暂停期间震动和音频策略一致",
+        "若提供血源个人暂停辅助，独立开关和验收，不称原作默认机制"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-10",
+      "group": "blindspot",
+      "name": "高清资产、国语、编译、下载和录制共享资源峰值",
+      "priority": "P1",
+      "requirement": "预算以最终组合包实测；分别记录纯游玩和录制档。运行时不做批量AI推理；资源加载与编译要有并发上限、取消和回收。",
+      "acceptance": [
+        "代表重场景交叉覆盖原声/国语、原资产/增强资产、冷/热缓存和录制开/关",
+        "同时观察帧时间尾部、声音underrun、峰值内存/IO与功耗，不只看平均FPS",
+        "不向所有系统进程重复承诺同一份共享内存，预算变化可退mip而非直接崩溃"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-11",
+      "group": "blindspot",
+      "name": "资产增强必须保护叙事线索和运动中的可读性",
+      "priority": "P1",
+      "requirement": "剧情线索、教程、图标、铭文及法线/遮罩不直接生成式批处理。按语义审核mip、alpha覆盖、字形和材质；忠实清晰档与风格增强档分别保存。",
+      "acceptance": [
+        "固定距离与运动轨迹检查近/中/远景，不以单张截图验收",
+        "关键文字逐字核对，碰撞/导航/战斗信息不随视觉增强改变",
+        "处理链和人工改动可定位到原hash并单项回退"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-12",
+      "group": "blindspot",
+      "name": "缓存不是永久资产，诊断工具也会改变测量",
+      "priority": "P1",
+      "requirement": "将缓存身份与源包/转换配方/构建/GPU/兼容标识关联，限制体积并允许安全重建；问题诊断和性能构建区分。非商店个人项目不能预设自动获得官方预缓存服务。",
+      "acceptance": [
+        "相容性键不匹配安全重建；截断缓存、写满与编译中止可恢复",
+        "报告标清采样/验证/录制开关和误差；录制档不直接替代纯游玩档",
+        "清缓存只影响可重建数据，不触及源资产、配置和存档"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-13",
+      "group": "blindspot",
+      "name": "批量AI生产要有返工依赖图和制作成本预算",
+      "priority": "P1",
+      "requirement": "先做离线小样测可接受率、每分钟音频制作与审核成本、磁盘峰值，再估全库；用源ID/配方/角色状态映射增量失效，不修改母版。",
+      "acceptance": [
+        "改一个术语时能够列出需人工复核、重生成、重编码和重验的具体对象",
+        "通过的WAV及编码成品作为基准保存；拒绝片不进入覆盖包",
+        "无实际素材分母和试生产吞吐时，不承诺全库工期或完成比例"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-14",
+      "group": "blindspot",
+      "name": "国语里说出的按键也属于动态提示系统",
+      "priority": "P0",
+      "requirement": "以动作ID贯通文字、图标、教程、字幕和可听提示；优先口述动作名，确需口述键位时用已审核变体或声明固定方案。不能运行时随便拼接TTS掩盖缺句。",
+      "acceptance": [
+        "列出所有可听键名和方向/长按/释放提示，核对Deck默认及支持的重绑方案",
+        "QTE语音不延迟或提前泄露关键时机，辅助提示与原作声轨职责明确",
+        "同一个动作在文字、图示和国语中没有相互矛盾的语义"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-15",
+      "group": "blindspot",
+      "name": "磁盘满和跨盘升级需要可恢复方案",
+      "priority": "P0",
+      "requirement": "旧包和新包独立目录，完成校验再在同一受支持文件系统切换激活标识；预检空间、权限与挂载状态。个人数据写用户目录，缓存可丢，源包不可写。",
+      "acceptance": [
+        "存储满、只读、介质缺失及迁移后路径变化均给出手柄可操作恢复入口",
+        "升级中止后旧版仍可启动；回滚程序不自动降级存档schema",
+        "Mac制作遵守Share大文件和40GiB余量纪律；Deck预算另行实测不照搬40GiB值"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    },
+    {
+      "id": "V5-16",
+      "group": "blindspot",
+      "name": "先证明一条完整可恢复路径，再扩整作与三作",
+      "priority": "P0",
+      "requirement": "先每作一个最小端到端切片：首次启动→游戏过程→教程/QTE→过场/声音→保存→退出→重进→异常恢复。原生基准稳定后分别合入资产和国语，再验组合。",
+      "acceptance": [
+        "从真正新用户状态开始，禁止以开发机热缓存或章节解锁替代",
+        "记录构建身份、实际渲染尺寸、输入方案、资产/配音范围及未覆盖内容",
+        "全游戏完成声明必须有全流程可达与内容分母；公开演示不替代验收",
+        "平台质量目标参考公开指南；没有Sony内部SDK/TRC和正式授权时不宣称通过PS5认证"
+      ],
+      "applicability": "applicable",
+      "status": "not_run",
+      "evidence": []
+    }
+  ]
+}

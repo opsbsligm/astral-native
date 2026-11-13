@@ -1,6 +1,9 @@
 # Architecture
 
-How the Switch build of *Tears of the Kingdom* becomes a native Windows x86-64 program. The upstream projects it builds on are listed under Credits in the [README](../README.md).
+Astral Chain 的 Switch AArch64 静态重编译架构，继承 TOTK 的宿主与渲染管线。
+下文涉及 TOTK 版本号、站点数量、时序与性能的历史数字仅解释上游设计，不能作为
+Astral Chain 已通过的测试或性能结果。当前私有 Deck 验收边界见 [差距矩阵](gap-matrix.md)。
+上游来源见 [README](../README.md) Credits。
 
 ## Starting points
 
