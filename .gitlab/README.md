@@ -12,7 +12,9 @@
   使用 Python 3.12、pip 26.3、pip-tools 7.6.2 真实解析版本，再由
   `generate_scan_lock.py` 从 PyPI 官方 HTTPS 版本元数据获取各平台安装包的摘要，生成
   `.gitlab/pipcompile.lock.txt`。这不代表已下载或运行所有平台安装包；安装时仍须核验摘要。
-  维护命令只在获准远端执行，缓存和临时文件放任务目录。
+  维护命令只在获准远端的固定 Linux/Python 3.12 SDK 容器执行。脚本在
+  `out/dependency-lock/` 新建独立会话目录，pip 工具、缓存和临时输入统一放入其中，
+  退出时清理，最终哈希锁保留在仓库；不会向宿主或 SDK 全局安装工具。
 - `check_dependency_coverage.py` 拒绝遗漏清单、版本冲突、无摘要锁文件以及未支持的语法。
   扫描后逐包核对 SBOM，范围包含锁中的传递依赖；缺包、错版本或缺 SBOM 都使 CI 失败。
 
