@@ -66,6 +66,20 @@ def validate_input():
     return {package: value['version'] for package, value in generated.items()}
 
 
+def scanned_lockfiles(data):
+    """Use scanned file evidence; the displayed input may name a tracked manifest."""
+    pending = [data.get('metadata', {}).get('component', {})]
+    found = set()
+    while pending:
+        component = pending.pop()
+        properties = {p['name']: p['value'] for p in component.get('properties', [])}
+        if component.get('type') == 'file' and \
+                properties.get('gitlab:dependency_scanning:file:type') == 'lockfile':
+            found.add(component['name'])
+        pending.extend(component.get('components', []))
+    return found
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input-only', action='store_true')
@@ -99,11 +113,12 @@ def main():
     observed = {}
     for path in args.sbom_dir.rglob('gl-sbom-*.cdx.json'):
         data = json.loads(path.read_text())
-        properties = {p['name']: p['value'] for p in data.get('metadata', {}).get('properties', [])}
-        source = properties.get('gitlab:dependency_scanning:input_file:path')
-        if source in observed:
-            raise ValueError('Ambiguous SBOM source: ' + source)
-        observed[source] = {name(p['name']): p['version'] for p in data.get('components', [])}
+        packages = {name(p['name']): p['version'] for p in data.get('components', [])
+                    if p.get('type', 'library') == 'library'}
+        for source in scanned_lockfiles(data) & expected.keys():
+            if source in observed:
+                raise ValueError('Ambiguous SBOM source: ' + source)
+            observed[source] = packages
     missing = {}
     for source, packages in expected.items():
         actual = observed.get(source, {})

@@ -37,6 +37,15 @@ class DependencyCoverage(unittest.TestCase):
         self.put('.gitlab/pipcompile.lock.txt', lock_generator.LOCK_HEADER + ''.join(
             pin + ' \\\n    --hash=sha256:' + 'a' * 64 + '\n' for pin in pins))
 
+    def sbom(self, reported='tools/requirements.txt', lock='tools/pipcompile.lock.txt', role='lockfile'):
+        return {'metadata': {
+            'properties': [{'name': 'gitlab:dependency_scanning:input_file:path', 'value': reported}],
+            'component': {'type': 'application', 'components': [{
+                'name': lock, 'type': 'file', 'properties': [
+                    {'name': 'gitlab:dependency_scanning:file:type', 'value': role}]}]}},
+            'components': [{'name': p, 'version': v, 'type': 'library'} for p, v in
+                           [('alpha', '1'), ('beta', '2'), ('transitive', '3')]]}
+
     def test_three_manifests_and_transitive_inventory_are_covered(self):
         self.assertEqual(coverage.validate_input(), {'alpha': '1', 'beta': '2', 'transitive': '3'})
         self.put('tools/requirements-py314.txt', 'alpha==4\n')
@@ -69,9 +78,8 @@ class DependencyCoverage(unittest.TestCase):
 
     def test_sbom_must_include_the_transitive_package_at_the_locked_version(self):
         source = 'sca-artifacts/gl-sbom-python.cdx.json'
-        data = {'metadata': {'properties': [
-            {'name': 'gitlab:dependency_scanning:input_file:path', 'value': 'tools/pipcompile.lock.txt'}]},
-            'components': [{'name': 'alpha', 'version': '1'}, {'name': 'beta', 'version': '2'}]}
+        data = self.sbom()
+        data['components'].pop()
         self.put(source, json.dumps(data))
         args = ['coverage', '--sbom-dir', str(self.root / 'sca-artifacts')]
         with patch.object(sys, 'argv', args), contextlib.redirect_stdout(io.StringIO()):
@@ -83,6 +91,28 @@ class DependencyCoverage(unittest.TestCase):
             self.put(source, json.dumps(data))
             coverage.main()
         self.assertTrue(json.loads((self.root / 'out/dependency-coverage.json').read_text())['complete'])
+
+    def test_displayed_manifest_path_does_not_hide_the_scanned_lock(self):
+        self.put('sca-artifacts/gl-sbom-python.cdx.json', json.dumps(self.sbom()))
+        with patch.object(sys, 'argv', ['coverage']), contextlib.redirect_stdout(io.StringIO()):
+            coverage.main()
+        self.assertTrue(json.loads((self.root / 'out/dependency-coverage.json').read_text())['complete'])
+
+    def test_all_packages_without_the_expected_lock_evidence_are_rejected(self):
+        absent = self.sbom()
+        absent['metadata'].pop('component')
+        for data in (self.sbom(role='requirements'), self.sbom(lock='tools/other.lock'), absent):
+            self.put('sca-artifacts/gl-sbom-python.cdx.json', json.dumps(data))
+            with patch.object(sys, 'argv', ['coverage']), contextlib.redirect_stdout(io.StringIO()):
+                with self.assertRaisesRegex(SystemExit, 'omitted'):
+                    coverage.main()
+
+    def test_duplicate_sboms_cannot_claim_the_same_lock(self):
+        for file in ('one', 'two'):
+            self.put('sca-artifacts/gl-sbom-' + file + '.cdx.json', json.dumps(self.sbom()))
+        with patch.object(sys, 'argv', ['coverage']), contextlib.redirect_stdout(io.StringIO()):
+            with self.assertRaisesRegex(ValueError, 'Ambiguous'):
+                coverage.main()
 
     def test_official_metadata_identity_and_artifact_hashes_are_required(self):
         data = {'info': {'name': 'Alpha', 'version': '1'},

@@ -27,3 +27,7 @@ SBOM 覆盖门禁继续强制失败。模板解析作业默认允许失败，不
 只扫描直接依赖。标记要求见 [GitLab 固定扫描器源码](https://gitlab.com/gitlab-org/security-products/analyzers/dependency-scanning/-/blob/cd0ebcc7e66002d96711bddf9d8e6b5047d6adf3/scanner/common/common.go)。
 容器扫描覆盖 SDK 系统与语言依赖；源码扫描和 CI 成功均不能证明零漏洞或游戏实机可玩。
 游戏资源、密钥、派生代码及私有包不进入公开仓库或普通 CI 制品。
+
+The coverage gate uses the scanned lockfile components in the SBOM metadata. GitLab can display a tracked
+`requirements.txt` as the input location even when it parsed the adjacent generated lockfile. That display path is not
+a substitute for lockfile evidence: complete package lists with only manifest evidence still fail coverage.
