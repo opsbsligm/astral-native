@@ -105,8 +105,12 @@ dependency-scanning:
     - job: native-build
       artifacts: false
   tags: [native-games-origin]
+  variables:
+    DS_ENABLE_MANIFEST_FALLBACK: "false"
   before_script:
-    - cp .gitlab/pipcompile.lock.txt pipcompile.lock.txt
+    # Keep the unified resolution beside the manifests. The scanner's project
+    # discovery otherwise treats tools/requirements.txt as an unlocked project.
+    - cp .gitlab/pipcompile.lock.txt tools/pipcompile.lock.txt
     - |
       if [ -n "${NATIVE_SECURITY_API_URL:-}" ]; then
         test -s "$CI_SERVER_TLS_CA_FILE"

@@ -34,7 +34,7 @@ class DependencyCoverage(unittest.TestCase):
         target.write_text(content)
 
     def lock(self, *pins):
-        self.put('.gitlab/pipcompile.lock.txt', ''.join(
+        self.put('.gitlab/pipcompile.lock.txt', lock_generator.LOCK_HEADER + ''.join(
             pin + ' \\\n    --hash=sha256:' + 'a' * 64 + '\n' for pin in pins))
 
     def test_three_manifests_and_transitive_inventory_are_covered(self):
@@ -52,17 +52,25 @@ class DependencyCoverage(unittest.TestCase):
             coverage.validate_input()
 
     def test_unhashed_lock_and_unhandled_manifest_syntax_fail(self):
-        self.put('.gitlab/pipcompile.lock.txt', 'alpha==1\nbeta==2\n')
+        self.put('.gitlab/pipcompile.lock.txt', lock_generator.LOCK_HEADER + 'alpha==1\nbeta==2\n')
         with self.assertRaisesRegex(ValueError, 'hashes'):
             coverage.validate_input()
         self.put('tools/requirements.txt', '-r hidden.txt\n')
         with self.assertRaisesRegex(ValueError, 'Unsupported'):
             coverage.declared_dependencies()
 
+    def test_scanner_header_must_be_on_the_second_line(self):
+        path = self.root / '.gitlab/pipcompile.lock.txt'
+        body = path.read_text().removeprefix(lock_generator.LOCK_HEADER)
+        for prefix in ('', lock_generator.LOCK_HEADER.splitlines()[1] + '\n#\n'):
+            self.put('.gitlab/pipcompile.lock.txt', prefix + body)
+            with self.assertRaisesRegex(ValueError, 'header'):
+                coverage.validate_input()
+
     def test_sbom_must_include_the_transitive_package_at_the_locked_version(self):
         source = 'sca-artifacts/gl-sbom-python.cdx.json'
         data = {'metadata': {'properties': [
-            {'name': 'gitlab:dependency_scanning:input_file:path', 'value': 'pipcompile.lock.txt'}]},
+            {'name': 'gitlab:dependency_scanning:input_file:path', 'value': 'tools/pipcompile.lock.txt'}]},
             'components': [{'name': 'alpha', 'version': '1'}, {'name': 'beta', 'version': '2'}]}
         self.put(source, json.dumps(data))
         args = ['coverage', '--sbom-dir', str(self.root / 'sca-artifacts')]
@@ -70,7 +78,7 @@ class DependencyCoverage(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit, 'omitted'):
                 coverage.main()
             result = json.loads((self.root / 'out/dependency-coverage.json').read_text())
-            self.assertEqual(result['missing']['pipcompile.lock.txt'], {'transitive': '3'})
+            self.assertEqual(result['missing']['tools/pipcompile.lock.txt'], {'transitive': '3'})
             data['components'].append({'name': 'transitive', 'version': '3'})
             self.put(source, json.dumps(data))
             coverage.main()
@@ -112,6 +120,7 @@ class DependencyCoverage(unittest.TestCase):
                 contextlib.redirect_stdout(io.StringIO()):
             lock_generator.generate(resolved, output)
         packages = coverage.requirements(output)
+        self.assertTrue(output.read_text().startswith(lock_generator.LOCK_HEADER))
         self.assertEqual(set(packages), {'alpha', 'transitive'})
         self.assertEqual(packages['alpha'], {'version': '1', 'hashes': {'a' * 64, 'b' * 64}})
 
