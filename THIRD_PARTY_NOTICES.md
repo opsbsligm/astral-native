@@ -42,6 +42,14 @@ Code copied or adapted from another project is listed here with its source, the 
 | Zstandard 1.5.7 (MSYS2 `mingw-w64-ucrt-x86_64-zstd`), static link | https://github.com/facebook/zstd, Copyright (c) Meta Platforms, Inc. and affiliates | BSD-3-Clause | `runtime/resolution.c` (the HeapDef table), `runtime/ov_zstd.c` (the game's zstd frames decoded on the host) |
 | musl `fma.c`, `fmaf.c` and `scalbn.c`, adapted into one file for the x86-64-v2 build | https://github.com/kraj/musl @ `5a56ad13e1e0790c06122978aad2a14d6b9efc1a` (mirror of https://git.musl-libc.org/cgit/musl), Copyright (c) 2005-2020 Rich Felker and contributors | MIT | `runtime/fma.c` (the correctly rounded fma/fmaf the FP lowering needs on CPUs without FMA3) |
 
+## NativeDeck sensor-only input
+
+| Component | Source | License | Use |
+|---|---|---|---|
+| NativeDeck sensor-only decoder | Original `totk-native/src/host/deck_motion_decode.c`, SHA-256 `8e39e7b44a7752d6ab644310e96e0bda9aa23c03b8e07bc8b18e6a9f5930f32a` | MIT, retained SPDX notice | `runtime/deck_motion_decode.c`; protocol/scale reference: SDL 3.2.30 Steam Deck backend (SDL contributors, zlib); no SDL mapping or feature-report code copied |
+
+The Linux reader is independently implemented for this project.
+
 ## Compiler runtime in a source build
 
 A build with the MSYS2 UCRT64 toolchain of `docs/building.md` links these into `totk.exe`. The installer release builds with llvm-mingw instead (its row below).

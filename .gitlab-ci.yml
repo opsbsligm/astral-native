@@ -49,6 +49,7 @@ native-unit:
     - python3 tests/spin_waits_test.py -v
     - python3 tests/pack_shader_cache_test.py -v
     - python3 tests/package_build_test.py -v
+    - python3 tests/deck_motion_test.py -v
     - python3 tests/installer_test.py -v
 
 native-build:
@@ -61,7 +62,7 @@ native-build:
   image: native-games/toolchain:02b1aa2ee13b00c30b38
   script:
     - mkdir -p out/home
-    - export HOME="$CI_PROJECT_DIR/out/home"
+    - export DOTNET_CLI_HOME="$CI_PROJECT_DIR/out/home"
     - mkdir -p out/gen/v101 out/build
     # Layout for the runtime-library self build: one main module at the first base (mirrors the
     # VM-verified command; the SAST artifact only needs real compile commands, not a linked exe).

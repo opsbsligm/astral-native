@@ -44,7 +44,7 @@
 |---|------|---------|------|------|
 | D1 | 金手指 | 部分 | [cheats] per-mod 布局（mods/<mod>/cheats/<build>.txt），Cheats 标签写 ini | 需核对实际操作码、精确版本绑定和写回校验；不能仅凭格式名判断与两作兼容性 |
 | D2 | Amiibo（虚拟服务） | 部分 | 继承的 amiibo.c/h 540B 转储读取与 ov_system.c nn::nfp IPC | 服务代码存在不等于本作会调用或有奖励玩法；须先确认原作适用性，再验证实际行为，不能计作已支持刷奖励 |
-| D3 | 原生陀螺仪 IMU | 部分 | input.c 的 SDL3 gamepad sensor 路径 | 两塞尔达已增加 Deck hidraw 原生读取；本作仍需适配原生后端和生命周期，实体方向/瞄准不得用遥操代验 |
+| D3 | 原生陀螺仪 IMU | 部分 | input.c 现有运动线程 + deck_motion_linux.c 只读原生后端；docs/native-motion.md | 已增加原生报告、坐标/单位、失效关闭与 SDL 来源仲裁的组件回归；实体报告可用性、方向/瞄准及游戏内生效仍未验证，不改变 97 项登记状态 |
 | D4 | 中文化 | 部分 | 设置与菜单支持简体中文（Setup + in-game menu）；controller-ui 有 cn.dtt | 游戏内文本语言可选；需确认中文覆盖完整度 |
 
 ## E. 恢复 / 构建 / 发布

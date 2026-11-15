@@ -16,6 +16,7 @@
 #include "fs.h"
 #include "host.h"
 #include "input.h"
+#include "deck_motion.h"
 #include "input_map.h"
 #include "input_wsys.h"
 #include "nvn_api.h"
@@ -805,19 +806,48 @@ int input_motion_enabled(void) {
 // sensor reads at rest.
 static void motion_main(void *arg) {
     (void)arg;
+#ifdef __linux__
+    DeckImu native = DECK_IMU_INIT;
+    int previous_source = 0;
+#endif
     for (;;) {
         plat_wait_ns(4000000);
         float a[3], g[3];
-        int have = 0;
+        int have = 0, connected = 0;
+#ifdef __linux__
+        int native_device = 0;
+#endif
         plat_mutex_lock(&lock);
         if (pad && SDL_GamepadConnected(pad)) {
+            connected = 1;
             SDL_UpdateGamepads();
             have = sensors_ready() && SDL_GetGamepadSensorData(pad, SDL_SENSOR_ACCEL, a, 3) &&
                    SDL_GetGamepadSensorData(pad, SDL_SENSOR_GYRO, g, 3);
+#ifdef __linux__
+            native_device = SDL_GetGamepadVendor(pad) == 0x28de && SDL_GetGamepadProduct(pad) == 0x1205;
+#endif
         }
         plat_mutex_unlock(&lock);
-        if (!have || !input_motion_enabled()) continue;
         double acc[3], gyro[3];
+        int enabled = input_motion_enabled();
+#ifdef __linux__
+        if (!enabled || !connected) { nd_deck_imu_close(&native); previous_source = 0; continue; }
+        int source = -1;
+        if (!have || native_device) source = nd_deck_imu_read(&native, kern_now_ns(), acc, gyro);
+        else nd_deck_imu_close(&native); // preserve an external controller's own usable sensors
+        if (source == 0) continue;  // retain native authority without repeating its timestamp
+        if (source > 0) {
+            if (previous_source != 2) motion_restart(motion_global());
+            previous_source = 2;
+            motion_feed(motion_global(), acc, gyro, kern_now_ns());
+            continue;
+        }
+        if (have && previous_source != 1) motion_restart(motion_global());
+        if (have) previous_source = 1;
+#else
+        (void)connected;
+#endif
+        if (!have || !enabled) continue;
         input_motion_axes(a, g, acc, gyro);
         motion_feed(motion_global(), acc, gyro, kern_now_ns());
     }

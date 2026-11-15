@@ -71,7 +71,7 @@ uint16_t rumble_motor(float a, float curve, float strength);
 int input_rumble_triggers_enabled(void);
 
 // Motion (AC_MOTION=0 turns it off, live). input_motion_start starts the sensor thread once: every 4 ms it reads the
-// gamepad's gyro and accelerometer (when it has them) and feeds motion_global(). Callable from any thread.
+// gamepad's sensors and, on Linux, a read-only native Deck IMU; feeds motion_global(). Callable from any thread.
 void input_motion_start(void);
 // AC_MOTION is not "0" (a live setting: read again when cfg_version changes). Off: the sensor reads at rest.
 int input_motion_enabled(void);
