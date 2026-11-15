@@ -47,6 +47,7 @@ Code copied or adapted from another project is listed here with its source, the 
 | Component | Source | License | Use |
 |---|---|---|---|
 | NativeDeck sensor-only decoder | Original `totk-native/src/host/deck_motion_decode.c`, SHA-256 `8e39e7b44a7752d6ab644310e96e0bda9aa23c03b8e07bc8b18e6a9f5930f32a` | MIT, retained SPDX notice | `runtime/deck_motion_decode.c`; protocol/scale reference: SDL 3.2.30 Steam Deck backend (SDL contributors, zlib); no SDL mapping or feature-report code copied |
+| NativeDeck pointer ownership and touch chrome patterns | Original `totk-native/src/host/native_touch.h` and `native_sidebar_ui.h` at `91103cdb7f640b03e80a69b189471828b7489ffe` | MIT, retained SPDX notices; NativeDeck contributors | `runtime/ui/native_touch.h` copied unchanged; `runtime/ui/touch_chrome.h` adapts the badge, docking and scoped ImGui style for Astral Chain's existing menu |
 
 The Linux reader is independently implemented for this project.
 

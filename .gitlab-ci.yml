@@ -50,6 +50,7 @@ native-unit:
     - python3 tests/pack_shader_cache_test.py -v
     - python3 tests/package_build_test.py -v
     - python3 tests/deck_motion_test.py -v
+    - python3 tests/touch_menu_test.py -v
     - python3 tests/installer_test.py -v
 
 native-build:

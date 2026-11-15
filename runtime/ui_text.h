@@ -23,6 +23,8 @@ typedef enum {
     UI_MENU_SET_BY_ENV,       // note on a setting an environment variable fixes
     UI_MENU_SAVE_FAILED,
     UI_MENU_VERSION,          // "Astral Chain Recomp %s, game %s": the port version and the game update, beside the title
+    UI_MENU_TOUCH_QUICK, UI_MENU_TOUCH_SETTINGS, UI_MENU_TOUCH_HIDE, UI_MENU_TOUCH_BACK, UI_MENU_TOUCH_HINT,
+    UI_MENU_TOUCH_UI, UI_MENU_TOUCH_UI_DESC,
 
     // Screen
     UI_MENU_FULLSCREEN, UI_MENU_FULLSCREEN_DESC,

@@ -18,6 +18,7 @@ void input_menu(int open);
 // of the combo, sticks are lx, ly, rx, ry. Returns 1 in the poll where the combo goes down (toggle the menu once).
 int input_overlay_gate(int *held, uint64_t *buttons);   // L+R+Minus+Plus: 1 in the poll all four go down
 int input_menu_gate(int *held, int menu_open, uint64_t *buttons, int32_t sticks[4]);
+// On Deck, only this host-menu sample uses physical south=A / east=B, independently of game bindings.
 int input_pad_read(uint64_t *buttons, int32_t *lx, int32_t *ly);
 // The open gamepad's kind (input_map.h PAD_KIND_*) for the button prompts' auto choice. Any thread.
 int input_pad_kind(void);
@@ -85,7 +86,11 @@ typedef struct {
     float acc[3], gyro[3], angle[3], dir[9];   // G, revolutions/s, revolutions, controller axes in the reference frame
     uint32_t attributes, reserved;             // bit 0 connected
 } MotionState;
+#ifdef __cplusplus
+static_assert(sizeof(MotionState) == 0x60, "SixAxisSensorState ABI");
+#else
 _Static_assert(sizeof(MotionState) == 0x60, "SixAxisSensorState ABI");
+#endif
 typedef struct MotionFusion MotionFusion;
 MotionFusion *motion_new(void);
 MotionFusion *motion_global(void);   // the gamepad's, fed by input_win.c

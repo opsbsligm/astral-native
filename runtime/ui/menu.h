@@ -3,7 +3,8 @@
 // (gfx_present.c). The menu core calls no window system: events come in through menu_event_*, the drawing happens in the
 // present path's command buffer.
 //
-// F1 or Esc on the keyboard and Minus and Plus held together (consumed in poll_merged, input_menu_gate in input.h) open it;
+// Deck touch mode uses a corner badge, quick panel and complete menu, without an opening hotkey/chord.
+// On desktop, F1 or Esc and Minus and Plus held together (input_menu_gate in input.h) open it;
 // F1, Esc, B or "Continue" close it. While it is open the game gets no input (input_menu, input.h) and keeps running; the
 // cursor is released from the mouse camera. Tabs Screen, Game, Mods, Sound, Controls and Menu (L / R or Q / E switch
 // them) hold option rows (ui/option_rows.h) over the cfg settings and the mods folder (mods.h); the bottom row has
@@ -26,6 +27,12 @@ extern "C" {
 int menu_is_open(void);
 void menu_toggle(void);                   // F1 / Esc on the keyboard, Minus+Plus on the pad
 void menu_perf_cycle(void);               // F10: the performance overlay off, fps, full
+int menu_touch_enabled(void);             // auto on Deck; touch mode does not open from hotkeys/chords
+// Window-thread pointer routing. kind: 1 native normalized touch, 0 mouse pixels.
+// type: 0 down, 1 motion, 2 up, 3 cancel. Returns 1 only for input owned by the UI.
+int menu_event_pointer(int kind, int type, uint64_t device, uint64_t finger, float x, float y);
+void menu_event_mouse_removed(uint64_t device);
+void menu_event_pointer_cancel(void);     // focus/size changes cancel a gesture, never activate its last item
 
 // ---- events from the window adapter, used only while the menu is open. key: an ImGuiKey; coordinates in pixels of the
 // window's client area, which is the swapchain image.
@@ -49,8 +56,8 @@ typedef struct {
                                           // 3 area average (a picture larger than the window)
 } MenuTarget;
 // Lays out this frame's overlay; 1 when there is something to draw. frame: the presented frame (0 unknown). *shot: a
-// path when the test hook wants this frame's swapchain image saved, else NULL. The first open starts ImGui's Vulkan
-// back end and uploads the font. With the menu closed it costs two loads and a compare.
+// path when the test hook wants this frame's swapchain image saved, else NULL. The first visible badge/menu starts
+// ImGui's Vulkan back end and uploads the font. Touch chrome uses the same present-thread context.
 int menu_overlay_frame(uint64_t frame, const MenuTarget *t, const char **shot);
 // Records the frame menu_overlay_frame laid out into cb, which is inside dynamic rendering on the image.
 void menu_overlay_draw(VkCommandBuffer cb);

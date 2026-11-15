@@ -32,6 +32,8 @@ static int g_font_bad;
 #pragma clang diagnostic pop
 #include "ui/binds_page.h"
 #include "ui/option_rows.h"
+#include "ui/native_touch.h"
+#include "ui/touch_chrome.h"
 
 extern "C" {
 #include "amiibo.h"
@@ -77,6 +79,8 @@ static const unsigned char roboto_ttf[] = {
 // ---- open state, any thread
 static std::atomic<int> g_open;     // the menu is open
 static std::atomic<int> g_reset;    // opened or closed since the last laid-out frame: drop stale input
+static std::atomic<int> g_pointer_capture;
+static int g_touch_layer = 2;      // present thread: 1 quick, 2 complete existing menu
 
 // g_open, the input block and the log line change together under open_lock, so they cannot disagree when the window thread
 // (F1, Esc), the polling thread (combo) and the present path (Continue, B) race.
@@ -89,7 +93,7 @@ static int change_open(int want) {
     if (g_open.load() != open) {
         g_open.store(open);
         g_reset.store(1);
-        input_menu(open);
+        input_menu(open || g_pointer_capture.load());
         rt_log("menu: %s", open ? "open" : "closed");
     }
     plat_mutex_unlock(&open_lock);
@@ -98,10 +102,21 @@ static int change_open(int want) {
 
 static void set_open(int open) { change_open(open); }
 
+static void pointer_capture(int active) {
+    plat_mutex_lock(&open_lock);
+    if (g_pointer_capture.exchange(active) != active) input_menu(active || g_open.load());
+    plat_mutex_unlock(&open_lock);
+}
+
+extern "C" int menu_touch_enabled(void) {
+    const char *v = cfg_value("AC_TOUCH_UI");
+    return !strcmp(v, "1") || (!strcmp(v, "auto") && !strcmp(cfg_device_profile(), "deck"));
+}
+
 static int g_failed_flag();
 extern "C" int menu_is_open(void) { return g_open.load(std::memory_order_relaxed); }
 extern "C" void menu_toggle(void) {
-    if (!g_failed_flag()) change_open(-1);
+    if (!g_failed_flag() && !menu_touch_enabled()) change_open(-1);
 }
 
 // ---- events from the window adapter, queued while the menu is open; the present path hands them to ImGui
@@ -110,12 +125,56 @@ struct Ev { int type, a, b; float x, y; };
 static PlatMutex ev_lock = PLAT_MUTEX_INIT;
 static Ev ev_q[EV_MAX];
 static int ev_n;
+static NdPointer pointer;
+static float hit_left, hit_top, hit_right, hit_bottom, pointer_width, pointer_height;
+
+// ev_lock is held. Overflow cancels the whole gesture rather than dropping its release.
+static void enqueue(Ev e) {
+    if (e.type == EV_POS && ev_n && ev_q[ev_n-1].type == EV_POS) ev_q[ev_n-1] = e;
+    else if (ev_n < EV_MAX) ev_q[ev_n++] = e;
+    else { ev_n = 0; nd_pointer_reset(&pointer); pointer_capture(0); g_reset.store(1); }
+}
 
 static void push(Ev e) {
-    if (!menu_is_open()) return;
+    if (!menu_is_open() && !menu_touch_enabled()) return;
     plat_mutex_lock(&ev_lock);
-    if (e.type == EV_POS && ev_n && ev_q[ev_n - 1].type == EV_POS) ev_q[ev_n - 1] = e;   // only the newest position
-    else if (ev_n < EV_MAX) ev_q[ev_n++] = e;
+    enqueue(e);
+    plat_mutex_unlock(&ev_lock);
+}
+
+extern "C" int menu_event_pointer(int kind, int type, uint64_t device, uint64_t finger, float x, float y) {
+    if (g_failed_flag() || (!menu_is_open() && !menu_touch_enabled())) {
+        if (g_pointer_capture.load()) menu_event_pointer_cancel();
+        return 0;
+    }
+    plat_mutex_lock(&ev_lock);
+    float px = kind ? x * pointer_width : x, py = kind ? y * pointer_height : y;
+    int hit = px >= hit_left && py >= hit_top && px < hit_right && py < hit_bottom;
+    bool world_mouse = !kind && pointer.mouse.outside;
+    NdTouchResult r = kind ? nd_pointer_touch(&pointer,type,device,finger,x,y,pointer_width,pointer_height,hit,menu_is_open())
+                          : nd_pointer_mouse(&pointer,type,device,x,y,pointer_width,pointer_height,hit,menu_is_open());
+    if (r.cancel) { ev_n = 0; g_reset.store(1); }
+    else if (r.emit) {
+        enqueue({EV_POS,0,0,r.x,r.y});
+        if (type != ND_TOUCH_MOVE) enqueue({EV_BUTTON,0,r.down,0,0});
+    }
+    pointer_capture(nd_pointer_active(&pointer));
+    plat_mutex_unlock(&ev_lock);
+    // A world press already seen by input_sdl must get its matching release even if a menu opened meanwhile.
+    return world_mouse ? 0 : r.consumed;
+}
+
+extern "C" void menu_event_mouse_removed(uint64_t device) {
+    plat_mutex_lock(&ev_lock);
+    if (nd_pointer_remove_mouse(&pointer,device)) { ev_n = 0; g_reset.store(1); }
+    pointer_capture(nd_pointer_active(&pointer));
+    plat_mutex_unlock(&ev_lock);
+}
+
+extern "C" void menu_event_pointer_cancel(void) {
+    plat_mutex_lock(&ev_lock);
+    nd_pointer_reset(&pointer); ev_n = 0; g_reset.store(1); pointer_capture(0);
+    hit_left = hit_top = hit_right = hit_bottom = pointer_width = pointer_height = 0;
     plat_mutex_unlock(&ev_lock);
 }
 
@@ -123,7 +182,12 @@ extern "C" void menu_event_key(int key, int down) { push({EV_KEY, key, down, 0, 
 extern "C" void menu_event_mouse_pos(float x, float y) { push({EV_POS, 0, 0, x, y}); }
 extern "C" void menu_event_mouse_button(int button, int down) { push({EV_BUTTON, button, down, 0, 0}); }
 extern "C" void menu_event_wheel(float dx, float dy) { push({EV_WHEEL, 0, 0, dx, dy}); }
-extern "C" void menu_event_focus(int focused) { push({EV_FOCUS, focused, 0, 0, 0}); }
+extern "C" void menu_event_focus(int focused) {
+    if (!focused) {
+        menu_event_pointer_cancel();
+    }
+    push({EV_FOCUS, focused, 0, 0, 0});
+}
 
 static void drain_events(ImGuiIO &io) {
     Ev q[EV_MAX];
@@ -838,6 +902,8 @@ static void tab_menu(float scale) {
     static const UiTextId langs[] = {UI_MENU_MENU_LANG_AUTO, UI_MENU_LANGNAME_EN, UI_MENU_LANGNAME_RU,
                                      UI_MENU_LANGNAME_PT_BR, UI_MENU_LANGNAME_ZH_HANS};
     opt_choice("AC_MENU_LANG", UI_MENU_MENU_LANG, langs, sizeof langs / sizeof *langs, UI_MENU_MENU_LANG_DESC);
+    static const UiTextId touch_names[] = {UI_MENU_AUTO,UI_MENU_OFF,UI_MENU_ON};
+    opt_choice("AC_TOUCH_UI",UI_MENU_TOUCH_UI,touch_names,3,UI_MENU_TOUCH_UI_DESC);
     opt_end();
 }
 
@@ -930,6 +996,15 @@ static void layout_menu(uint32_t w, uint32_t h, float scale) {
     ImGui::SetNextWindowSize(ImVec2(ww, wh), ImGuiCond_Always);
     ImGui::Begin("##menu", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
                                         ImGuiWindowFlags_NoSavedSettings);
+    if (menu_touch_enabled()) {
+        ImGui::BeginDisabled(g_modal || binds_modal());
+        if (ImGui::Button(menu_text(UI_MENU_TOUCH_BACK), ImVec2(0, std::max(48.f,48*scale)))) {
+            g_touch_layer = 1; g_reset.store(1);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button(menu_text(UI_MENU_TOUCH_HIDE), ImVec2(0, std::max(48.f,48*scale)))) set_open(0);
+        ImGui::EndDisabled();
+    }
     ImGui::TextColored(ImVec4(0.93f, 0.76f, 0.33f, 1), "%s", menu_text(UI_MENU_TITLE));
     // the port version and the game update, right-aligned on the title line: what a bug report needs first
     char game[16], version[96];
@@ -1256,6 +1331,36 @@ static void perf_draw(const MenuTarget *t, float scale) {
     dl->AddText(ImVec2(p.x + pad, p.y + pad), IM_COL32(255, 255, 255, 235), g_perf_text);
 }
 
+static TouchChrome touch_chrome;
+static void layout_touch(const MenuTarget *t) {
+    TouchChoices choices = {cfg_int("AC_FPS"),cfg_bool("AC_MOTION"),perf_mode_of(cfg_value("AC_PERF_OVERLAY")),
+        cfg_from_env("AC_FPS")!=0,cfg_from_env("AC_MOTION")!=0,cfg_from_env("AC_PERF_OVERLAY")!=0,
+        cfg_from_env("AC_TOUCH_DOCK")!=0,cfg_last_save_ok()==0};
+    TouchRequest r = touch_chrome_draw(touch_chrome,menu_is_open()?1:0,cfg_int("AC_TOUCH_DOCK"),choices);
+    if (r.layer >= 0) {
+        if (r.layer) g_touch_layer = r.layer;
+        if (r.layer == 2) {
+            const int pages[] = {TAB_SCREEN,TAB_CONTROLS,TAB_CHEATS,g_tab};
+            if (r.page >= 0 && r.page < 4) g_tab_request = pages[r.page];
+            g_reset.store(1);
+        }
+        set_open(r.layer != 0);
+    }
+    if (r.dock >= 0 && !choices.dock_locked) {
+        char value[8]; snprintf(value,sizeof value,"%d",r.dock);
+        cfg_set("AC_TOUCH_DOCK",value); opt_save_soon();
+    }
+    if (r.fps >= 0) { cfg_set("AC_FPS",r.fps==30?"30":"60"); opt_save_soon(); }
+    if (r.motion >= 0) { cfg_set("AC_MOTION",r.motion?"1":"0"); opt_save_soon(); }
+    if (r.perf >= 0) {
+        const char *values[] = {"off","fps","full"}; cfg_set("AC_PERF_OVERLAY",values[r.perf]); opt_save_soon();
+    }
+    plat_mutex_lock(&ev_lock);
+    hit_left=touch_chrome.lower.x;hit_top=touch_chrome.lower.y;hit_right=touch_chrome.upper.x;hit_bottom=touch_chrome.upper.y;
+    pointer_width=(float)t->width;pointer_height=(float)t->height;
+    plat_mutex_unlock(&ev_lock);
+}
+
 extern "C" int menu_overlay_frame(uint64_t frame, const MenuTarget *t, const char **shot) {
     *shot = NULL;
     cheats_frame(frame);   // the data cheats and the buttons of the cheats that need them held
@@ -1265,19 +1370,25 @@ extern "C" int menu_overlay_frame(uint64_t frame, const MenuTarget *t, const cha
     perf_tick(plat_now_ns(), t);
     amiibo_tick();
     bool open = g_open.load(std::memory_order_relaxed);
+    bool touch = menu_touch_enabled();
+    static bool previous_touch;
+    if (previous_touch && !touch) menu_event_pointer_cancel();
+    previous_touch = touch;
     if (!open) {
         if (g_save_pending) g_save_pending = opt_save_tick(1);   // closed: the last change goes to totk.ini now
         if (g_test.at && !g_test.opened && frame >= g_test.at) {
             g_test.opened = frame;
             g_test.page = 0;
             g_tab_request = 0;
+            g_touch_layer = 2;
             set_open(1);
             open = true;
-        } else if (!g_perf_mode) {
+        } else if (!g_perf_mode && !touch) {
             return 0;
         }
     }
     if (g_failed_flag()) {
+        menu_event_pointer_cancel();
         set_open(0);
         return 0;
     }
@@ -1287,6 +1398,7 @@ extern "C" int menu_overlay_frame(uint64_t frame, const MenuTarget *t, const cha
     if (!vk_up(t) || (g_font_scale != scale && !fonts_up(scale))) {
         rt_log("menu: Dear ImGui Vulkan back end set-up failed; the menu stays closed");
         g_failed.store(1);
+        menu_event_pointer_cancel();
         set_open(0);
         return 0;
     }
@@ -1295,7 +1407,7 @@ extern "C" int menu_overlay_frame(uint64_t frame, const MenuTarget *t, const cha
         ImGui::GetStyle().ScaleAllSizes(scale);
         g_style_scale = scale;
     }
-    list_gpus(t->instance);
+    if (open && (!touch || g_touch_layer == 2)) list_gpus(t->instance);
     ImGuiIO &io = ImGui::GetIO();
     int reset = g_reset.exchange(0);
     if (reset) {
@@ -1310,21 +1422,28 @@ extern "C" int menu_overlay_frame(uint64_t frame, const MenuTarget *t, const cha
     double dt = g_last_ns ? (t0 - g_last_ns) / 1e9 : 1 / 60.0;
     io.DeltaTime = (float)(dt < 1e-4 ? 1e-4 : dt > 0.1 ? 0.1 : dt);
     g_last_ns = t0;
-    if (!open) {   // the overlay alone: no input reaches ImGui
-    } else if (g_test.page < 0) {
+    if ((open || touch) && g_test.page < 0) {
         drain_events(io);
-        pad_events(io, reset);
-    } else {   // the test hook's pages: the user's input in a background test window must not change settings
+        if (open) pad_events(io, reset);
+    } else if (g_test.page >= 0) {   // background test pages do not accept user input
         plat_mutex_lock(&ev_lock);
         ev_n = 0;
         plat_mutex_unlock(&ev_lock);
     }
     ImGui_ImplVulkan_NewFrame();
     ImGui::NewFrame();
-    if (open) layout_menu(t->width, t->height, scale);
+    if (open && (!touch || g_touch_layer == 2)) {
+        layout_menu(t->width, t->height, scale);
+        plat_mutex_lock(&ev_lock);
+        float ww=fminf(t->width*.88f,1400*scale),wh=fminf(t->height*.86f,820*scale);
+        hit_left=(t->width-ww)*.5f;hit_top=(t->height-wh)*.5f;hit_right=hit_left+ww;hit_bottom=hit_top+wh;
+        pointer_width=(float)t->width;pointer_height=(float)t->height;
+        plat_mutex_unlock(&ev_lock);
+    }
+    else if (touch) layout_touch(t);
     perf_draw(t, scale);
     ImGui::Render();
-    if (open) g_save_pending = opt_save_tick(0);
+    if (open || touch) g_save_pending = opt_save_tick(!menu_is_open());
     g_cost_ns += plat_now_ns() - t0;
     if (g_test.page >= 0 && frame >= g_test.opened + g_test.per_page * (uint64_t)(g_test.page + 1)) {
         static char path[512];   // this frame's image goes to a file; then the next tab, or the menu closes

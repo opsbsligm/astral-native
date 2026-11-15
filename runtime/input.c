@@ -591,8 +591,11 @@ static void poll_merged(uint64_t *buttons, int32_t *lx, int32_t *ly, int32_t *rx
     static int combo_held, overlay_held;
     int32_t st[4] = {sl[0], sl[1], sr[0], sr[1]};
     // L+R+Minus+Plus step the performance overlay (F10); checked first, so it takes Minus and Plus from the menu's chord
-    int overlay = combo_held ? 0 : input_overlay_gate(&overlay_held, &b);
-    int toggle = input_menu_gate(&combo_held, menu_is_open(), &b, st);
+    int overlay = 0, toggle = 0;
+    if (!menu_touch_enabled()) {
+        overlay = combo_held ? 0 : input_overlay_gate(&overlay_held, &b);
+        toggle = input_menu_gate(&combo_held, menu_is_open(), &b, st);
+    } else combo_held = overlay_held = 0;
     sl[0] = st[0], sl[1] = st[1], sr[0] = st[2], sr[1] = st[3];
     plat_mutex_unlock(&lock);
     if (toggle) menu_toggle();
@@ -655,6 +658,12 @@ int input_pad_read(uint64_t *buttons, int32_t *lx, int32_t *ly) {
     if (!state) start();
     if (state > 0) binds_refresh();
     int ok = state == 1 && pad_read(&b, sl, sr);
+    // Host menus use the Deck's physical south/east buttons, independent of game rebindings and Nintendo layout.
+    if (ok && !strcmp(cfg_device_profile(), "deck")) {
+        b &= ~((1ull << B_A) | (1ull << B_B));
+        if (SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_SOUTH)) b |= 1ull << B_A;
+        if (SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_EAST)) b |= 1ull << B_B;
+    }
     plat_mutex_unlock(&lock);
     *buttons = b;
     *lx = sl[0];
