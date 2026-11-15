@@ -44,14 +44,14 @@
 |---|------|---------|------|------|
 | D1 | 金手指 | 部分 | [cheats] per-mod 布局（mods/<mod>/cheats/<build>.txt），Cheats 标签写 ini | 需核对实际操作码、精确版本绑定和写回校验；不能仅凭格式名判断与两作兼容性 |
 | D2 | Amiibo（虚拟服务） | 部分 | 继承的 amiibo.c/h 540B 转储读取与 ov_system.c nn::nfp IPC | 服务代码存在不等于本作会调用或有奖励玩法；须先确认原作适用性，再验证实际行为，不能计作已支持刷奖励 |
-| D3 | 原生陀螺仪 IMU | 部分 | input.c 现有运动线程 + deck_motion_linux.c 只读原生后端；docs/native-motion.md | 已增加原生报告、坐标/单位、失效关闭与 SDL 来源仲裁的组件回归；实体报告可用性、方向/瞄准及游戏内生效仍未验证，不改变 97 项登记状态 |
+| D3 | 原生陀螺仪 IMU | 部分 | input.c 现有运动线程 + deck_motion_linux.c 只读原生后端；docs/native-motion.md | 组件回归通过；2026-11-15 Deck 只读探测 5 秒收到 1,222 个新样本，描述符恢复原数。仅证明该会话的实体报告可用性；Steam 档案变化、方向/瞄准及游戏内生效未验，不改变 97 项登记状态 |
 | D4 | 中文化 | 部分 | 设置与菜单支持简体中文（Setup + in-game menu）；controller-ui 有 cn.dtt | 游戏内文本语言可选；需确认中文覆盖完整度 |
 
 ## E. 恢复 / 构建 / 发布
 | # | 能力 | 上游状态 | 证据 | 差距 |
 |---|------|---------|------|------|
 | E1 | 输入即构建（自己 dump 的游戏+key） | 有 | config.local.toml 指向 base/update 与密钥；代码、输入、生成物分离 | 需在获准私有构建节点验证完整流程及加密恢复，不在日用 Mac 或 Deck 构建 |
-| E2 | 游戏内容不进公仓 | 有 | check_content.py GENERATED_MARKER 校验 + .gitignore 大文件规则 | 达标；CI 跑同一校验 |
+| E2 | 游戏内容不进公仓 | 部分 | check_content.py 对 controller-ui/ 有既有豁免；四个游戏派生 UI 归档仍被跟踪 | 仓库当前为私有，未建立公开传播证据；整体内容边界不达标，保持发布关闭，先核使用方与受控保全，再处理现行树及历史；不以暂存区检查通过代替全历史审查 |
 | E3 | 可复现构建/CI | 部分 | 本仓已配置 unit/runtime-build、SAST/Secret/Container/Dependency 与 SBOM 覆盖门禁 | 需精确 HEAD、实际远端 Runner 与合并后 main 全部终态通过；配置存在不是验收通过 |
 | E4 | Deck 运行包（无 Docker 依赖） | 缺 | Windows 为 .exe/Setup；Linux 构建链接系统库并使用 $ORIGIN rpath | 便携打包已修复 v101/astralchain 与原子发布；本项目完整自包含 Deck 包仍未验 |
 | E5 | 存档保护/原子快照 | 部分 | 有存档数据（README "its save data"）；未见原子快照 | 需移植两塞尔达的存档去重+原子快照+回滚 |
