@@ -26,7 +26,7 @@
 | B1 | 游戏内玩法按键保持原规则 | 有 | input.c 合并 SDL 手柄+键盘+鼠标；AC_BIND_* 可重绑 | 达标 |
 | B2 | 菜单 A确认/B取消 | 部分 | input_pad_read 的 Deck 应用菜单采样独立使用物理 south/east，不受玩法绑定影响 | 已补应用层菜单；原作游戏菜单、图示和 QTE 的上下文规则仍待适配及实机核对 |
 | B3 | Deck/Valve 手柄图示 | 缺 | cfg.c:142 PROMPTS auto/nintendo/xbox/playstation；controller-ui/ 仅 xbox+playstation 两套 dtt | 上游无 Valve 家族图标→需做 Deck 图示（两塞尔达已有 draw_deck_art.py 体系） |
-| B4 | 三级触屏控制栏（角标→快面板→全设置） | 部分 | ui/touch_chrome.h + menu_sdl.cpp；docs/touch-menu.md | 已接角标→快捷面板→现有完整设置、8向拖动停靠与配置持久化；Deck 触屏模式不由热键/组合键打开，实际触屏与 GPU 画面待验，不提高 97 项登记状态 |
+| B4 | 三级触屏控制栏（角标→快面板→全设置） | 部分 | ui/touch_chrome.h + menu_sdl.cpp；docs/touch-menu.md | 三级入口、8向停靠与持久化已接；Deck RADV 1280×800 离屏角标/快捷面板及中文输出通过。实际游戏合成、完整设置画面和实体触屏仍待验，不提高 97 项登记状态 |
 | B5 | 触屏/手柄 QTE 提示 | 部分 | 有按钮提示体系（make_prompts_folders） | 需 Deck 布局下核对 QTE（异界锁链多连招/QTE 密集） |
 
 ## C. 画面 / 性能
