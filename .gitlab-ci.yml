@@ -49,6 +49,8 @@ native-unit:
     - python3 tests/spin_waits_test.py -v
     - python3 tests/pack_shader_cache_test.py -v
     - python3 tests/package_build_test.py -v
+    - python3 tests/deck_motion_test.py -v
+    - python3 tests/touch_menu_test.py -v
     - python3 tests/installer_test.py -v
 
 native-build:
@@ -61,13 +63,24 @@ native-build:
   image: native-games/toolchain:02b1aa2ee13b00c30b38
   script:
     - mkdir -p out/home
-    - export HOME="$CI_PROJECT_DIR/out/home"
+    - export DOTNET_CLI_HOME="$CI_PROJECT_DIR/out/home"
     - mkdir -p out/gen/v101 out/build
     # Layout for the runtime-library self build: one main module at the first base (mirrors the
     # VM-verified command; the SAST artifact only needs real compile commands, not a linked exe).
     - python3 -c "import sys; sys.path.insert(0,'recomp'); import layout; layout.write([('main', layout.FIRST_BASE, 0)], 'out/gen/v101', romfs_size=0, romfs_base=layout.base_of('v101'))"
     - python3 tools/build_game.py --make-runtime-lib --deps "$NATIVE_DEPS" --gen out/gen/v101 --out out/build
     - test -f out/build/libacrt.a
+    # Compile the public offscreen diagnostic; physical AMD rendering is a separate Deck check.
+    - |
+      python3 -B - <<'PY'
+      import os, subprocess, tempfile
+      from pathlib import Path
+      ram = os.statvfs('/dev/shm')
+      assert ram.f_bavail * ram.f_frsize >= 16 * 1024 * 1024, 'UI probe RAM workspace unavailable'
+      with tempfile.TemporaryDirectory(prefix='astral-touch-' + os.environ['CI_JOB_ID'] + '-', dir='/dev/shm') as scratch:
+          subprocess.run(['python3', '-B', 'tools/build_touch_probe.py', '--deps', os.environ['NATIVE_DEPS'],
+                          '--out', str(Path(scratch) / 'build')], check=True)
+      PY
     - ninja -f out/build/build.ninja -t compdb > out/compdb.json
     - python3 .gitlab/prepare_cpp_scan.py --compdb out/compdb.json --build out/build --gen out/gen/v101 --deps "$NATIVE_DEPS" --output out/cppscan
   artifacts:

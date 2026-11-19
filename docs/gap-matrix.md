@@ -24,9 +24,9 @@
 | # | 能力 | 上游状态 | 证据 | 差距 |
 |---|------|---------|------|------|
 | B1 | 游戏内玩法按键保持原规则 | 有 | input.c 合并 SDL 手柄+键盘+鼠标；AC_BIND_* 可重绑 | 达标 |
-| B2 | 菜单 A确认/B取消 | 部分 | 上游设置菜单为 ImGui（F1），键位默认；未见"A确认B取消"明确策略 | 需移植 menu_confirm 策略（两塞尔达已有 menu_confirm.c） |
+| B2 | 菜单 A确认/B取消 | 部分 | input_pad_read 的 Deck 应用菜单采样独立使用物理 south/east，不受玩法绑定影响 | 已补应用层菜单；原作游戏菜单、图示和 QTE 的上下文规则仍待适配及实机核对 |
 | B3 | Deck/Valve 手柄图示 | 缺 | cfg.c:142 PROMPTS auto/nintendo/xbox/playstation；controller-ui/ 仅 xbox+playstation 两套 dtt | 上游无 Valve 家族图标→需做 Deck 图示（两塞尔达已有 draw_deck_art.py 体系） |
-| B4 | 三级触屏控制栏（角标→快面板→全设置） | 缺 | 上游为 F1 ImGui 设置菜单 + F10 性能覆盖层，键盘热键触发 | 需移植我们的 control_bar（badge→quick→full、纯触屏、8向锚点） |
+| B4 | 三级触屏控制栏（角标→快面板→全设置） | 部分 | ui/touch_chrome.h + menu_sdl.cpp；docs/touch-menu.md | 三级入口、8向停靠与持久化已接；Deck RADV 1280×800 离屏角标/快捷面板及中文输出通过。实际游戏合成、完整设置画面和实体触屏仍待验，不提高 97 项登记状态 |
 | B5 | 触屏/手柄 QTE 提示 | 部分 | 有按钮提示体系（make_prompts_folders） | 需 Deck 布局下核对 QTE（异界锁链多连招/QTE 密集） |
 
 ## C. 画面 / 性能
@@ -44,14 +44,14 @@
 |---|------|---------|------|------|
 | D1 | 金手指 | 部分 | [cheats] per-mod 布局（mods/<mod>/cheats/<build>.txt），Cheats 标签写 ini | 需核对实际操作码、精确版本绑定和写回校验；不能仅凭格式名判断与两作兼容性 |
 | D2 | Amiibo（虚拟服务） | 部分 | 继承的 amiibo.c/h 540B 转储读取与 ov_system.c nn::nfp IPC | 服务代码存在不等于本作会调用或有奖励玩法；须先确认原作适用性，再验证实际行为，不能计作已支持刷奖励 |
-| D3 | 原生陀螺仪 IMU | 部分 | input.c 的 SDL3 gamepad sensor 路径 | 两塞尔达已增加 Deck hidraw 原生读取；本作仍需适配原生后端和生命周期，实体方向/瞄准不得用遥操代验 |
+| D3 | 原生陀螺仪 IMU | 部分 | input.c 现有运动线程 + deck_motion_linux.c 只读原生后端；docs/native-motion.md | 组件回归通过；2026-11-15 Deck 只读探测 5 秒收到 1,222 个新样本，描述符恢复原数。仅证明该会话的实体报告可用性；Steam 档案变化、方向/瞄准及游戏内生效未验，不改变 97 项登记状态 |
 | D4 | 中文化 | 部分 | 设置与菜单支持简体中文（Setup + in-game menu）；controller-ui 有 cn.dtt | 游戏内文本语言可选；需确认中文覆盖完整度 |
 
 ## E. 恢复 / 构建 / 发布
 | # | 能力 | 上游状态 | 证据 | 差距 |
 |---|------|---------|------|------|
 | E1 | 输入即构建（自己 dump 的游戏+key） | 有 | config.local.toml 指向 base/update 与密钥；代码、输入、生成物分离 | 需在获准私有构建节点验证完整流程及加密恢复，不在日用 Mac 或 Deck 构建 |
-| E2 | 游戏内容不进公仓 | 有 | check_content.py GENERATED_MARKER 校验 + .gitignore 大文件规则 | 达标；CI 跑同一校验 |
+| E2 | 游戏内容不进公仓 | 部分 | check_content.py 对 controller-ui/ 有既有豁免；四个游戏派生 UI 归档仍被跟踪 | 仓库当前为私有，未建立公开传播证据；整体内容边界不达标，保持发布关闭，先核使用方与受控保全，再处理现行树及历史；不以暂存区检查通过代替全历史审查 |
 | E3 | 可复现构建/CI | 部分 | 本仓已配置 unit/runtime-build、SAST/Secret/Container/Dependency 与 SBOM 覆盖门禁 | 需精确 HEAD、实际远端 Runner 与合并后 main 全部终态通过；配置存在不是验收通过 |
 | E4 | Deck 运行包（无 Docker 依赖） | 缺 | Windows 为 .exe/Setup；Linux 构建链接系统库并使用 $ORIGIN rpath | 便携打包已修复 v101/astralchain 与原子发布；本项目完整自包含 Deck 包仍未验 |
 | E5 | 存档保护/原子快照 | 部分 | 有存档数据（README "its save data"）；未见原子快照 | 需移植两塞尔达的存档去重+原子快照+回滚 |

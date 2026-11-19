@@ -16,6 +16,7 @@
 #include "fs.h"
 #include "host.h"
 #include "input.h"
+#include "deck_motion.h"
 #include "input_map.h"
 #include "input_wsys.h"
 #include "nvn_api.h"
@@ -590,8 +591,11 @@ static void poll_merged(uint64_t *buttons, int32_t *lx, int32_t *ly, int32_t *rx
     static int combo_held, overlay_held;
     int32_t st[4] = {sl[0], sl[1], sr[0], sr[1]};
     // L+R+Minus+Plus step the performance overlay (F10); checked first, so it takes Minus and Plus from the menu's chord
-    int overlay = combo_held ? 0 : input_overlay_gate(&overlay_held, &b);
-    int toggle = input_menu_gate(&combo_held, menu_is_open(), &b, st);
+    int overlay = 0, toggle = 0;
+    if (!menu_touch_enabled()) {
+        overlay = combo_held ? 0 : input_overlay_gate(&overlay_held, &b);
+        toggle = input_menu_gate(&combo_held, menu_is_open(), &b, st);
+    } else combo_held = overlay_held = 0;
     sl[0] = st[0], sl[1] = st[1], sr[0] = st[2], sr[1] = st[3];
     plat_mutex_unlock(&lock);
     if (toggle) menu_toggle();
@@ -654,6 +658,12 @@ int input_pad_read(uint64_t *buttons, int32_t *lx, int32_t *ly) {
     if (!state) start();
     if (state > 0) binds_refresh();
     int ok = state == 1 && pad_read(&b, sl, sr);
+    // Host menus use the Deck's physical south/east buttons, independent of game rebindings and Nintendo layout.
+    if (ok && !strcmp(cfg_device_profile(), "deck")) {
+        b &= ~((1ull << B_A) | (1ull << B_B));
+        if (SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_SOUTH)) b |= 1ull << B_A;
+        if (SDL_GetGamepadButton(pad, SDL_GAMEPAD_BUTTON_EAST)) b |= 1ull << B_B;
+    }
     plat_mutex_unlock(&lock);
     *buttons = b;
     *lx = sl[0];
@@ -805,19 +815,48 @@ int input_motion_enabled(void) {
 // sensor reads at rest.
 static void motion_main(void *arg) {
     (void)arg;
+#ifdef __linux__
+    DeckImu native = DECK_IMU_INIT;
+    int previous_source = 0;
+#endif
     for (;;) {
         plat_wait_ns(4000000);
         float a[3], g[3];
-        int have = 0;
+        int have = 0, connected = 0;
+#ifdef __linux__
+        int native_device = 0;
+#endif
         plat_mutex_lock(&lock);
         if (pad && SDL_GamepadConnected(pad)) {
+            connected = 1;
             SDL_UpdateGamepads();
             have = sensors_ready() && SDL_GetGamepadSensorData(pad, SDL_SENSOR_ACCEL, a, 3) &&
                    SDL_GetGamepadSensorData(pad, SDL_SENSOR_GYRO, g, 3);
+#ifdef __linux__
+            native_device = SDL_GetGamepadVendor(pad) == 0x28de && SDL_GetGamepadProduct(pad) == 0x1205;
+#endif
         }
         plat_mutex_unlock(&lock);
-        if (!have || !input_motion_enabled()) continue;
         double acc[3], gyro[3];
+        int enabled = input_motion_enabled();
+#ifdef __linux__
+        if (!enabled || !connected) { nd_deck_imu_close(&native); previous_source = 0; continue; }
+        int source = -1;
+        if (!have || native_device) source = nd_deck_imu_read(&native, kern_now_ns(), acc, gyro);
+        else nd_deck_imu_close(&native); // preserve an external controller's own usable sensors
+        if (source == 0) continue;  // retain native authority without repeating its timestamp
+        if (source > 0) {
+            if (previous_source != 2) motion_restart(motion_global());
+            previous_source = 2;
+            motion_feed(motion_global(), acc, gyro, kern_now_ns());
+            continue;
+        }
+        if (have && previous_source != 1) motion_restart(motion_global());
+        if (have) previous_source = 1;
+#else
+        (void)connected;
+#endif
+        if (!have || !enabled) continue;
         input_motion_axes(a, g, acc, gyro);
         motion_feed(motion_global(), acc, gyro, kern_now_ns());
     }

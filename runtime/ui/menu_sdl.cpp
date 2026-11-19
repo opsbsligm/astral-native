@@ -39,44 +39,71 @@ static ImGuiKey key_of(SDL_Scancode sc) {
     }
 }
 
-extern "C" void menu_sdl_event(const SDL_Event *e) {
+extern "C" int menu_sdl_event(const SDL_Event *e) {
+    static bool synthetic_owned;
     float d = (float)gfx_window_sdl_density();
+    SDL_Window *window = gfx_window_sdl();
+    SDL_WindowID own = window ? SDL_GetWindowID(window) : 0;
     switch (e->type) {
+    case SDL_EVENT_FINGER_DOWN:
+    case SDL_EVENT_FINGER_MOTION:
+    case SDL_EVENT_FINGER_UP:
+    case SDL_EVENT_FINGER_CANCELED: {
+        if (!own || e->tfinger.windowID != own) return 0;
+        int type = e->type == SDL_EVENT_FINGER_DOWN ? 0 : e->type == SDL_EVENT_FINGER_MOTION ? 1 :
+                   e->type == SDL_EVENT_FINGER_UP ? 2 : 3;
+        int consumed = menu_event_pointer(1,type,e->tfinger.touchID,e->tfinger.fingerID,e->tfinger.x,e->tfinger.y);
+        if (type == 0) synthetic_owned = consumed != 0;
+        return consumed;
+    }
     case SDL_EVENT_KEY_DOWN:
-        // Esc with the menu open (opened by F1 too) is not a toggle here: it goes to the menu, which closes itself
-        if (!e->key.repeat && (e->key.scancode == SDL_SCANCODE_F1 ||
-                               (e->key.scancode == SDL_SCANCODE_ESCAPE && !menu_is_open()))) {
-            menu_toggle();
-            return;
-        }
-        if (e->key.scancode == SDL_SCANCODE_F10) {
-            if (!e->key.repeat) menu_perf_cycle();
-            return;
+        if (!menu_touch_enabled()) {
+            if (!e->key.repeat && (e->key.scancode == SDL_SCANCODE_F1 ||
+                (e->key.scancode == SDL_SCANCODE_ESCAPE && !menu_is_open()))) { menu_toggle(); return 0; }
+            if (e->key.scancode == SDL_SCANCODE_F10) {
+                if (!e->key.repeat) menu_perf_cycle();
+                return 0;
+            }
         }
         [[fallthrough]];
     case SDL_EVENT_KEY_UP:
-        if (!menu_is_open()) return;
-        if (ImGuiKey k = key_of(e->key.scancode)) menu_event_key(k, e->type == SDL_EVENT_KEY_DOWN);
-        return;
+        if (menu_is_open()) if (ImGuiKey k = key_of(e->key.scancode)) menu_event_key(k,e->type == SDL_EVENT_KEY_DOWN);
+        return 0;
     case SDL_EVENT_MOUSE_MOTION:
-        if (menu_is_open()) menu_event_mouse_pos(e->motion.x * d, e->motion.y * d);
-        return;
+        if (!own || e->motion.windowID != own) return 0;
+        if (e->motion.which == SDL_TOUCH_MOUSEID && synthetic_owned) return 1;
+        return menu_event_pointer(0,1,e->motion.which,0,e->motion.x*d,e->motion.y*d);
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
     case SDL_EVENT_MOUSE_BUTTON_UP: {
-        if (!menu_is_open()) return;
-        int b = e->button.button == SDL_BUTTON_LEFT ? 0 : e->button.button == SDL_BUTTON_RIGHT ? 1
-              : e->button.button == SDL_BUTTON_MIDDLE ? 2 : -1;
-        if (b < 0) return;
-        menu_event_mouse_pos(e->button.x * d, e->button.y * d);
-        menu_event_mouse_button(b, e->type == SDL_EVENT_MOUSE_BUTTON_DOWN);
-        return;
+        if (!own || e->button.windowID != own) return 0;
+        if (e->button.which == SDL_TOUCH_MOUSEID && synthetic_owned) {
+            if (e->type == SDL_EVENT_MOUSE_BUTTON_UP) synthetic_owned = false;
+            return 1;
+        }
+        if (e->button.button == SDL_BUTTON_LEFT)
+            return menu_event_pointer(0,e->type == SDL_EVENT_MOUSE_BUTTON_DOWN?0:2,e->button.which,0,e->button.x*d,e->button.y*d);
+        if (menu_is_open()) {
+            int b=e->button.button==SDL_BUTTON_RIGHT?1:e->button.button==SDL_BUTTON_MIDDLE?2:-1;
+            if (b>=0) { menu_event_mouse_pos(e->button.x*d,e->button.y*d);menu_event_mouse_button(b,e->type==SDL_EVENT_MOUSE_BUTTON_DOWN); }
+        }
+        return 0;
     }
     case SDL_EVENT_MOUSE_WHEEL:
-        if (menu_is_open()) menu_event_wheel(e->wheel.x, e->wheel.y);
-        return;
+        if (menu_is_open()) menu_event_wheel(e->wheel.x,e->wheel.y);
+        return 0;
+    case SDL_EVENT_MOUSE_REMOVED:
+        menu_event_mouse_removed(e->mdevice.which);return 0;
     case SDL_EVENT_WINDOW_FOCUS_GAINED:
     case SDL_EVENT_WINDOW_FOCUS_LOST:
-        menu_event_focus(e->type == SDL_EVENT_WINDOW_FOCUS_GAINED);
-        return;
+        if (e->window.windowID == own) {
+            if (e->type == SDL_EVENT_WINDOW_FOCUS_LOST) synthetic_owned = false;
+            menu_event_focus(e->type == SDL_EVENT_WINDOW_FOCUS_GAINED);
+        }
+        return 0;
+    case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+    case SDL_EVENT_WINDOW_MINIMIZED:
+        if (e->window.windowID == own) { synthetic_owned=false;menu_event_pointer_cancel(); }
+        return 0;
+    default: return 0;
     }
 }

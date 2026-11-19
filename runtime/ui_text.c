@@ -29,6 +29,11 @@ static const char *const text_en[UI_TEXT_COUNT] = {
     SWKBD("Text entry", "Enter a name", "Horse", "OK", "Cancel", "Controller: A = OK, B = Cancel"),
 
     [UI_MENU_TITLE] = "Settings",
+    [UI_MENU_TOUCH_QUICK] = "Quick panel", [UI_MENU_TOUCH_SETTINGS] = "All settings",
+    [UI_MENU_TOUCH_HIDE] = "Hide", [UI_MENU_TOUCH_BACK] = "Quick panel",
+    [UI_MENU_TOUCH_HINT] = "Touch to open. Drag the badge or handle to dock at an edge.",
+    [UI_MENU_TOUCH_UI] = "Touch control panel",
+    [UI_MENU_TOUCH_UI_DESC] = "Automatic enables the corner badge on Deck. Touch opens quick controls, then full settings. Opening hotkeys and chords are disabled in this mode.",
     [UI_MENU_TAB_SCREEN] = "Screen", [UI_MENU_TAB_GAME] = "Game", [UI_MENU_TAB_MODS] = "Mods", [UI_MENU_TAB_SOUND] = "Sound",
     [UI_MENU_TAB_CONTROLS] = "Controls", [UI_MENU_TAB_MENU] = "Menu", [UI_MENU_TAB_ADVANCED] = "Advanced",
     [UI_MENU_CONTINUE] = "Continue", [UI_MENU_QUIT] = "Quit game",
@@ -1208,6 +1213,11 @@ static const char *const text_zh_hans[UI_TEXT_COUNT] = {
     SWKBD("文字输入", "请输入名字", "马儿", "确定", "取消", "手柄：A 确定，B 取消"),
 
     [UI_MENU_TITLE] = "设置",
+    [UI_MENU_TOUCH_QUICK] = "快捷面板", [UI_MENU_TOUCH_SETTINGS] = "完整设置",
+    [UI_MENU_TOUCH_HIDE] = "收起", [UI_MENU_TOUCH_BACK] = "返回快捷面板",
+    [UI_MENU_TOUCH_HINT] = "点按展开，拖动角标或短条可停靠到屏幕边缘。",
+    [UI_MENU_TOUCH_UI] = "触屏控制栏",
+    [UI_MENU_TOUCH_UI_DESC] = "自动模式在 Deck 显示角标。点按打开快捷面板，再进入完整设置；此模式不使用快捷键或组合键打开菜单。",
     [UI_MENU_TAB_SCREEN] = "显示",
     [UI_MENU_TAB_GAME] = "游戏",
     [UI_MENU_TAB_SOUND] = "声音",

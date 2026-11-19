@@ -156,8 +156,8 @@ static void handle(const SDL_Event *e) {
     }
     if (e->type == g_ev_base + EV_CLOSE) gfx_window_closed();
     if (!g_win) return;
+    if (menu_sdl_event(e)) return;
     input_sdl_event(e);
-    menu_sdl_event(e);
     switch (e->type) {
     case SDL_EVENT_KEY_DOWN:
         if (e->key.scancode == SDL_SCANCODE_F11 && !e->key.repeat) {

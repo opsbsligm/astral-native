@@ -18,7 +18,7 @@ void input_sdl_event(const SDL_Event *e); // every event, first
 void input_sdl_idle(void);                // no event for a while: a cursor change asked for from another thread
 
 // ui/menu_sdl.cpp
-void menu_sdl_event(const SDL_Event *e);  // every event, after input_sdl_event
+int menu_sdl_event(const SDL_Event *e);  // before game input; 1 consumes a UI-owned pointer event
 
 #ifdef __cplusplus
 }

@@ -1,0 +1,23 @@
+# Deck touch menu
+
+`AC_TOUCH_UI=auto` enables the corner badge for the existing Deck device profile and retains the desktop menu otherwise. `0` disables it and `1` enables it explicitly. The Menu page exposes this setting. In touch mode F1, Esc and the controller opening chords do not open the application menu; Esc and physical B can still dismiss an open menu. The existing gameplay bindings and other setting defaults are unchanged.
+
+Tap the badge for the quick panel. Its live frame-rate, motion and performance-overlay controls use the existing config consumers, environment locks and delayed save path. Screen, Controls, Cheats and All settings open the existing complete menu. Its Back button returns to the quick panel and Hide collapses it. The panel reports a settings-save failure. New labels use the existing English/Simplified Chinese catalog and font collection.
+
+Drag the badge or panel handle to any of the eight edge/corner docks. `AC_TOUCH_DOCK=0..7` is saved through `cfg_set` and `cfg_save`, with default 4 (bottom right). Environment overrides also lock docking. The drawing helper only returns requests; it never writes settings or accesses game state.
+
+The SDL window adapter routes native finger events and ordinary mouse input before gameplay input. One pointer owns its complete gesture; secondary fingers and synthetic mouse duplicates cannot click a second control. A press begun in the world retains its release even when a menu opens meanwhile. Focus loss, resize, device removal and queue overflow cancel a gesture without activating its last item. Events cross the existing bounded queue; ImGui and Vulkan remain on the presentation thread.
+
+Only application-menu sampling uses physical Deck south=A and east=B independently of gameplay rebinding. This does not yet adapt the original game's menus, prompts or QTEs. The quick panel exposes the existing 30/60 frame-rate choices; it does not claim a new performance tier, upscaler or game capability.
+
+`tests/touch_menu_test.py` exercises production queue/routing code, the actual SDL adapter, the menu-only button sample, config persistence and real ImGui frames under ASan/UBSan. Those checks and the runtime build establish component behavior. The diagnostic below separately covers offscreen badge/quick-panel rendering and Chinese glyphs; physical touchscreen use, game-menu behavior and long-session stability remain open. Overall `hardware_validated=false`.
+
+## Offscreen GPU diagnostic
+
+On an approved x86-64 Linux build node, `python3 -B tools/build_touch_probe.py --deps "$NATIVE_DEPS" --out /dev/shm/touch-probe` compiles the public diagnostic into a new directory outside the source checkout. It uses the actual chrome header, catalog, ImGui Vulkan backend and the production style definition. The existing native-build CI job also compiles it inside a private job-specific RAM directory and removes that directory on success or failure. This does not run a physical GPU check in CI.
+
+The executable takes one existing system CJK font path. It creates no window, reads no game inputs and sends no desktop input. It disables Mesa's on-disk shader cache in its own process. The caller must also confine other temporary/cache paths to a private RAM workspace and clean up after waiting for it to exit. Standard output is a binary stream: four little-endian 32-bit values (magic `0x4e445549`, width 1280, height 800, frame count 2), then tightly packed RGBA8 badge and quick-panel frames. Standard error reports one `GPU_RESULT` JSON line. Captures stay in the task's private review channel and never enter Git or release artifacts.
+
+On 2026-11-15 the production chrome from `180f1ae641c4b2cfd262c3062ebb814b65f73d44` rendered through the Deck's AMD Custom GPU 0405 / RADV VANGOGH with dynamic rendering and successful image readback. At 1280×800 and font scale 800/1080, 51 Chinese character checks found real glyphs. Visual review found no missing characters, overlapping controls or clipped buttons in the badge/quick-panel output. The final probe explicitly disabled disk caching and produced pixel-identical output to the first reviewed run; system font SHA-256 and stable metadata matched before/after. Vulkan resources, executable memfd and the empty private RAM cache directory were released. No executable or image file was written to the Deck's SSD.
+
+This verifies the isolated badge/quick-panel GPU component and this fixed layout. It does not verify the game's swapchain composition, other DPI/scales, the complete settings pages, physical touch gestures, guest menus, power/resume behavior or long-session stability. Overall game acceptance remains `hardware_validated=false`.
