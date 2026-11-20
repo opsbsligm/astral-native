@@ -19,6 +19,11 @@ __pycache__/
 # CI job outputs (pip --target wheels, pip cache under out/home): untracked and never committed,
 # but tools/check_content.py scans them in the native-unit job, so keep them out of the scan like BOTW does.
 /out/
+
+# Test scratch dirs: private_package_test runs beside the repo so install keeps os.rename
+# on one filesystem. Untracked, and tools/check_content.py skips them by name.
+/astral-seal-*/
+/astral-deploy-*/
 *.xci
 *.xcz
 *.nsp

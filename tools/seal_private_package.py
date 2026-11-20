@@ -77,6 +77,7 @@ def main():
     assert src.is_dir() and not out.exists(), (src, out)
     lib = src / 'lib'
     lib.mkdir(exist_ok=True)
+    absent = []
     for name in REQUIRED:
         if (lib / name).is_file():
             continue
@@ -87,8 +88,11 @@ def main():
                 os.chmod(lib / name, 0o644)
                 break
         else:
-            raise SystemExit(f'{lib / name} missing and no --lib-dir holds it; the release would'
-                             ' fail to start (see docs/building.md "Linux release")')
+            absent.append(name)
+    if absent:
+        raise SystemExit('missing runtime libraries: ' + ', '.join(absent)
+                         + f' (no --lib-dir holds them); the release would fail to start'
+                         ' (see docs/building.md "Linux release")')
     files, extras = {}, []
     out.mkdir(parents=True)
     for path in sorted(p for p in src.rglob('*') if p.is_file()):
