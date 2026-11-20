@@ -37,6 +37,15 @@ def is_vendored(path: Path) -> bool:
     return "controller-ui" in path.parts
 
 
+# docs/deck-grid/: the Nintendo key art this repo's Steam library images are cut from, plus
+# the four generated images themselves. They are marketing art, not game content, and they
+# ship in the repo on purpose: both official source URLs already went 403, so a URL alone
+# would not reproduce the same pixels on another machine. Size is exempted; the key and
+# generated-code scans still apply. Matched by directory name (see is_vendored).
+def is_library_art(path: Path) -> bool:
+    return "deck-grid" in path.parts
+
+
 # Written by the code generator into every file it emits.
 GENERATED_MARKER = "AC_RECOMP_" + "GENERATED_FROM_GAME_CODE"
 
@@ -61,7 +70,7 @@ def problems_for(path: Path, allow_large: bool = False) -> list[str]:
     """allow_large: files over MAX_BYTES (toolchain binaries in a release folder) are checked for the generated marker
     only, not refused."""
     found = []
-    vendored = is_vendored(path)
+    vendored = is_vendored(path) or is_library_art(path)
     if not vendored and path.suffix.lower() in BLOCKED_SUFFIXES:
         found.append(f"blocked file type {path.suffix}")
     if path.name.lower() in BLOCKED_NAMES:
