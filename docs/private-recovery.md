@@ -48,4 +48,7 @@ python3 tools/rebuild_private.py --version MY_PACKAGE_VERSION \
 
 - 恢复工具链（`recovery.py`／`recovery_gitlab.py`）与两塞尔达同版本，`tests/recovery_test.py`、`tests/recovery_stream_test.py` 在 CI 内执行。
 - `rebuild_private.py` 的两条分支由单元测试覆盖发行包路径（识别 `run.sh` 并原地校验、不触发重建）；完整输入路径按 `docs/building.md` 串接现有工具，尚未在干净主机端到端跑通，真机重建未验收。
-- age identity 与既有恢复包的可用性已在受控主机上以真实解密验证；本项目尚未产出首个 `private-recovery` 包，封装与发布流程沿用两塞尔达已跑通的命令。
+- age identity 与既有恢复包的可用性已在受控主机上以真实解密验证。
+- 首个包 `20261120-astral-main-706ec15`（`--include runtime=… --include answers=…`，20 个分片共 10 310 768 099 字节）已发布到本项目 Generic Packages，发布时逐分片回读，另以一次完整下载比对：20 个分片与 `index.json` 同本地字节级一致。
+- 同一包在受控 Linux 工位上以 `--low-peak` 完整还原过一遍：27 个成员全部就位，`runtime/bundle.json` 的 24 个条目逐文件摘要与尺寸相符，`source_commit` 即发布时的 main 提交，`answers/shader-answers.bin` 摘要与录制原件一致。
+- 真机未验收：还原出的发行包尚未在 Deck 上跑过 `run.sh --verify` 与实际启动，游戏内表现以真机为准。
