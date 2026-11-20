@@ -27,6 +27,22 @@ cd astral-native
 
 两塞尔达同款输入契约：**游戏玩法按键保持原规则；所有菜单物理 Deck A 确认、B 取消；Deck 图示随实际绑定与菜单上下文；控制栏 角标→快捷面板→完整设置，纯触屏不依赖热键**。本仓当前为 G0 固定基线 + 差距矩阵阶段，`hardware_validated=false`，Deck 实机切片（G2）优先跑通 1.5.0 60fps + DECK 档，再按矩阵 B3/B4/D1 移植 Deck 图示、三级触屏控制栏与统一金手指。
 
+## 掌机库条目（Steam 游戏模式）
+
+发行包装好后，掌机库里还需要一条指向启动器的非 Steam 快捷方式，以及封面、海报和图标。
+`docs/deck-grid/` 带着图一起完成这件事，全新 Deck 上不需要任何仓外文件：
+
+    scp -r docs/deck-grid deck@DECK:/tmp/deck-grid-astral
+    ssh deck@DECK /tmp/deck-grid-astral/deploy-deck-launcher.sh
+    ssh deck@DECK /tmp/deck-grid-astral/deploy-deck-art.sh
+
+`deploy-deck-launcher.sh` 安装 `astral-steam.sh`；`deploy-deck-art.sh` 调用同目录的
+`deck-shortcut.py`：解析二进制 `shortcuts.vdf`，沿用 Steam 已分配给该启动器的 appid，
+就地更新这一条，其余快捷方式按原字节重新序列化。四件图（横卡 920x430、竖海报 600x900、
+hero 1920x620、图标 1254x1254）由 `gen-deck-art.py` 从 `docs/deck-grid/src/` 里的任天堂
+官方宣传图按绝对坐标裁切重生成，`src/SHA256SUMS` 钉住源图内容。已装过再跑一遍不改动任何
+字节；加 `--check` 只报告差异。多账号 Deck 传 `STEAM_ID`。改完在 Steam 里重启一次生效。
+
 ## 分享与恢复
 
 源码分享目前暂停：现行私有仓仍跟踪四个游戏派生 UI 归档，`tools/check_content.py` 对 `controller-ui/` 的既有豁免不能证明仓库或历史干净。归档与历史先保全，完成使用方核查、受控存放及出站历史审查后再开放交付；游戏内容、密钥和存档不进入可分享源码。个人 `package/` 与源码交付分开；完整输入到 Deck 的构建和加密恢复链尚未验收，不能保证“克隆后一条命令即可开玩”。
