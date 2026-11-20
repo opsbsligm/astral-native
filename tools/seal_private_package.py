@@ -34,8 +34,13 @@ export SteamDeck=1
 export LD_LIBRARY_PATH="$here/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 exec "$here/astralchain" "$@"
 '''
-# Cache that must never ship inside a release: it is written at run time next to the
-# exe, so a sealed release keeps it in the profile directory instead (see launcher).
+# package_build.py collects DLLs only on Windows, so the shared libraries the Linux binary
+# links have to reach <portable>/lib/ before sealing: the versioned file plus the SONAME the
+# loader asks for. Sealing stages any of these that the build folder lacks from --lib-dir and
+# then fails if one is still missing, rather than handing back a release that dies at launch.
+REQUIRED = ('libSDL3.so.0', 'libSDL3.so.0.4.16', 'libvpx.so.9', 'libvpx.so.9.0.0')
+# Written at run time beside the exe unless the launcher redirects it; never ships inside a
+# release, because the folder would grow while the game runs.
 EXCLUDE = {'run.sh'}
 
 
@@ -65,9 +70,25 @@ def main():
     ap.add_argument('--out', type=Path, required=True)
     ap.add_argument('--commit', required=True)
     ap.add_argument('--image', required=True, help='docker image id of the toolchain that built the exe')
+    ap.add_argument('--lib-dir', type=Path, action='append', default=[],
+                    help='folder to copy a missing runtime library from; repeatable')
     a = ap.parse_args()
     src, out = a.portable.resolve(), a.out.resolve()
     assert src.is_dir() and not out.exists(), (src, out)
+    lib = src / 'lib'
+    lib.mkdir(exist_ok=True)
+    for name in REQUIRED:
+        if (lib / name).is_file():
+            continue
+        for folder in a.lib_dir:
+            twin = folder / name
+            if twin.is_file():
+                shutil.copyfile(twin, lib / name)
+                os.chmod(lib / name, 0o644)
+                break
+        else:
+            raise SystemExit(f'{lib / name} missing and no --lib-dir holds it; the release would'
+                             ' fail to start (see docs/building.md "Linux release")')
     files, extras = {}, []
     out.mkdir(parents=True)
     for path in sorted(p for p in src.rglob('*') if p.is_file()):
