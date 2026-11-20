@@ -54,6 +54,8 @@ native-unit:
     - python3 tests/private_package_test.py -v
     - python3 tests/deck_shortcut_test.py -v
     - python3 tests/installer_test.py -v
+    - python3 tests/recovery_test.py -v
+    - python3 tests/recovery_stream_test.py -v
 
 native-build:
   needs:
