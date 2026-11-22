@@ -25,4 +25,6 @@
 
 上游未对其附独立版权声明，本仓沿用上游 MIT 授权与"公开项目自带素材"的既有口径；如需追溯，见上游仓 `controller-ui/` 同名文件。其余 18 个 `.dtt` 字体文件未随本仓公开（私有构建仍从上游提取）。
 
+**生成物**：`docs/deck-grid/*.png` 为 `docs/deck-grid/src/` 源图的派生生成物，随源图许可。
+
 *This project is not affiliated with, endorsed by, or sponsored by Nintendo.*
