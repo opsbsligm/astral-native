@@ -1,5 +1,8 @@
 # astral-native
 
+
+> **版权与商标**：*Astral Chain* © Nintendo。本仓为个人源码工程（fan project），未与任天堂关联、获其认可或赞助；*Astral Chain* 为任天堂注册商标，仅用于描述兼容性对象。仓库内官方宣传图见 [NINTENDO-ART-NOTICE.md](docs/NINTENDO-ART-NOTICE.md)；游戏代码（ExeFS）与 `prod.keys` 由用户从自有卡带提取提供，本仓不含；`controller-ui/` 系统级手柄 UI 资源的来源与口径见 [NINTENDO-ART-NOTICE.md](docs/NINTENDO-ART-NOTICE.md)。
+
 《异界锁链》（Astral Chain，Switch 1.0.0 + 1.0.1 更新）的独立 Linux / Steam Deck 原生源码工程。基于上游 [astral-chain-pc-recomp](https://github.com/captainj-sparrow/astral-chain-pc-recomp)（MIT，totk-pc-recomp 管线：LLVM AArch64→x86-64 静态重编译 + Vulkan）固定 **1.5.0**（commit `194e0669`，见 [UPSTREAM.json](UPSTREAM.json)）；源码、构建工具和版本检查均在本仓库，与《旷野之息》《王国之泪》两独立仓同构，不依赖旧 `nativedeck` 工作区。
 
 ## 与两塞尔达的差距
@@ -13,7 +16,7 @@
 先准备自己 dump 的输入（不进版本库）：base.nsp（`01007300020FA000`）、update-1.0.1.nsp（`01007300020FA800`）、prod.keys，在仓库根目录的私有 `config.local.toml` 中配置路径（文件已被 .gitignore 忽略）。以下示例假定 `[work] dir` 指向 `/mnt/astral-build`，并已按 [docs/building.md](docs/building.md) 完成工具链、提取、字体、shader translator 与静态重编译；不是从原始输入开始的一键构建：
 
 ```sh
-git clone https://www.bsligm.com:8445/codex/astral-native.git
+git clone https://gitlab.example.com:8445/codex/astral-native.git
 cd astral-native
 # Run on an approved Linux build node after completing the prerequisites above.
 .venv/bin/python tools/build_game.py --version v101 --gen generated/v101 --out /mnt/astral-build/v101

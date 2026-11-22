@@ -27,7 +27,7 @@ python3 tools/recovery.py seal --label ASTRAL_VERSION \
 ## 发布与重建
 
 ```sh
-python3 tools/recovery_gitlab.py publish --url https://www.bsligm.com:8445 \
+python3 tools/recovery_gitlab.py publish --url https://gitlab.example.com:8445 \
   --project 23 --version MY_PACKAGE_VERSION --token-file /private/gitlab-token \
   --bundle /mnt/sealed-bundle
 ```

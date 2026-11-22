@@ -26,7 +26,7 @@ MIN_FREE_BUILD = 160 * 1024 ** 3
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--url', default='https://www.bsligm.com:8445')
+    p.add_argument('--url', default='https://gitlab.example.com:8445')
     p.add_argument('--version', required=True)
     p.add_argument('--token-file', required=True, type=Path)
     p.add_argument('--identity', required=True, type=Path)
